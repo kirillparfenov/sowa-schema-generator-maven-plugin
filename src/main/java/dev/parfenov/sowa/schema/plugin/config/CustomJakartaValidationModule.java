@@ -7,6 +7,7 @@ import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidatio
 import java.util.Objects;
 import java.util.UUID;
 
+//todo можно вынести в отдельные модули
 public class CustomJakartaValidationModule extends JakartaValidationModule {
 
     public CustomJakartaValidationModule(JakartaValidationOption... options) {
