@@ -35,7 +35,8 @@ public class SowaGeneratorMojo extends AbstractMojo {
         var restControllersMethods = classParser.getAllRestControllersMethods();
 
         // Генерация
-        var generator = new Generator(new GeneratorConfig());
+        var generatorConfig = new GeneratorConfig();
+        var generator = new Generator(generatorConfig);
         var sowaSchemaGenerator = new SowaSchemaGeneratorImpl(generator);
         var sowaSchemas = sowaSchemaGenerator.generateSchema(restControllersMethods);
 

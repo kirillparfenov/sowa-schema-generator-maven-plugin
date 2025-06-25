@@ -1,20 +1,17 @@
 package dev.parfenov.sowa.schema.plugin.sowa;
 
 import com.fasterxml.classmate.ResolvedType;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import dev.parfenov.sowa.schema.plugin.classparser.ClassMethod;
 import dev.parfenov.sowa.schema.plugin.generator.GeneratedResult;
 import dev.parfenov.sowa.schema.plugin.generator.Generator;
 import org.springframework.util.CollectionUtils;
 
-import java.util.*;
+import java.util.List;
 
 public class SowaSchemaGeneratorImpl implements SowaSchemaGenerator {
 
     private static final String REQUEST_SUFFIX = "_request";
     private static final String RESPONSE_SUFFIX = "_response";
-    private static final String DEFINITIONS = "definitions";
     private final Generator generator;
 
     public SowaSchemaGeneratorImpl(Generator generator) {
@@ -26,7 +23,6 @@ public class SowaSchemaGeneratorImpl implements SowaSchemaGenerator {
         if (CollectionUtils.isEmpty(restMethods)) {
             return List.of();
         }
-
         try {
             return restMethods
                     .stream()
@@ -48,32 +44,9 @@ public class SowaSchemaGeneratorImpl implements SowaSchemaGenerator {
         if (type == null) {
             return null;
         }
-
-        var generatedSchema = generator.getSchemaGenerator().generateSchema(type);
-        var definitions = extractDefinitions(generatedSchema);
-        deleteDefinitions(generatedSchema);
-        return new GeneratedResult(schemaName, generatedSchema, definitions);
-    }
-
-    private List<GeneratedResult> extractDefinitions(ObjectNode generatedSchema) {
-        var definitions = generatedSchema.get(DEFINITIONS);
-        if (definitions == null) {
-            return List.of();
-        }
-
-        var definitionList = new ArrayList<GeneratedResult>();
-        for (var node : new NodeIterable(definitions.fields())) {
-            var schema = new GeneratedResult(node.getKey(), (ObjectNode) node.getValue(), null);
-            definitionList.add(schema);
-        }
-        return definitionList;
-    }
-
-    private void deleteDefinitions(ObjectNode schema) {
-        schema.remove(DEFINITIONS);
-    }
-
-    private record NodeIterable(Iterator<Map.Entry<String, JsonNode>> iterator)
-            implements Iterable<Map.Entry<String, JsonNode>> {
+        var mainSchema = generator.generate(type);
+        var definitions = generator.extractDefinitions(mainSchema);
+        generator.deleteDefinitions(mainSchema);
+        return new GeneratedResult(schemaName, mainSchema, definitions);
     }
 }

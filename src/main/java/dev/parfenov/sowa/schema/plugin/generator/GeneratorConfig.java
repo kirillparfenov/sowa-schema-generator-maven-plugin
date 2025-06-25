@@ -10,9 +10,10 @@ public class GeneratorConfig {
     private final SchemaGeneratorConfig config;
 
     public GeneratorConfig() {
-        this.config = new SchemaGeneratorConfigBuilder(SchemaVersion.DRAFT_7, OptionPreset.PLAIN_JSON)
+        var configBuilder = new SchemaGeneratorConfigBuilder(SchemaVersion.DRAFT_7, OptionPreset.PLAIN_JSON)
                 .with(new JacksonModule())
                 .with(new Swagger2Module())
+                .with(Option.SCHEMA_VERSION_INDICATOR)
                 .with(Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT)
                 .with(Option.NULLABLE_ARRAY_ITEMS_ALLOWED)
                 .with(Option.NULLABLE_FIELDS_BY_DEFAULT)
@@ -23,8 +24,8 @@ public class GeneratorConfig {
                 .with(Option.MAP_VALUES_AS_ADDITIONAL_PROPERTIES)
                 /// если не передать JakartaValidationOption.INCLUDE_PATTERN_EXPRESSIONS - не будет учитываться аннотация @Pattern
                 /// и даже не передастся String resolveStringPattern(MemberScope<?, ?> member) в  SchemaGeneratorConfigPart<?>.withStringPatternResolver
-                .with(new CustomJakartaValidationModule(JakartaValidationOption.INCLUDE_PATTERN_EXPRESSIONS))
-                .build();
+                .with(new CustomJakartaValidationModule(JakartaValidationOption.INCLUDE_PATTERN_EXPRESSIONS));
+        this.config = configBuilder.build();
     }
 
     public SchemaGeneratorConfig getConfig() {
