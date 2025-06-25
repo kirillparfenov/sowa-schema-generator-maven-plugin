@@ -15,6 +15,7 @@
         <maven.core.version>3.9.9</maven.core.version>
         <maven.tools.version>3.15.0</maven.tools.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jsonschema-generator.version>4.37.0</jsonschema-generator.version>
     </properties>
 
     <dependencies>
@@ -29,19 +30,29 @@
             <version>3.0.2</version>
         </dependency>
         <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>2.2.25</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.victools</groupId>
+            <artifactId>jsonschema-module-swagger-2</artifactId>
+            <version>${jsonschema-generator.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.github.victools</groupId>
             <artifactId>jsonschema-generator</artifactId>
-            <version>4.31.0</version>
+            <version>${jsonschema-generator.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.victools</groupId>
             <artifactId>jsonschema-module-jackson</artifactId>
-            <version>4.31.0</version>
+            <version>${jsonschema-generator.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.victools</groupId>
             <artifactId>jsonschema-module-jakarta-validation</artifactId>
-            <version>4.31.0</version>
+            <version>${jsonschema-generator.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
