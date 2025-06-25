@@ -7,8 +7,10 @@ public class GitClassParser extends AbstractClassParser {
 
     private final Git git;
 
-    public GitClassParser(String gitDiffCommand, MavenProject project) {
-        super(project);
-        this.git = new Git(gitDiffCommand);
+    public GitClassParser(final ClassParserConfig config) {
+        super(config);
+        this.git = new Git(config.gitDiffCommand());
     }
+
+    //todo закончить
 }

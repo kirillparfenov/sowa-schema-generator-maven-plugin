@@ -1,4 +1,4 @@
-package dev.parfenov.sowa.schema.plugin.config;
+package dev.parfenov.sowa.schema.plugin.generator;
 
 import com.github.victools.jsonschema.generator.MemberScope;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationModule;

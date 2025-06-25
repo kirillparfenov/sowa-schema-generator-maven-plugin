@@ -4,7 +4,6 @@ import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.members.ResolvedMethod;
 import dev.parfenov.sowa.schema.plugin.classloader.ClassLoader;
 import dev.parfenov.sowa.schema.plugin.classloader.ResolvedClassLoader;
-import dev.parfenov.sowa.schema.plugin.generator.RestControllerMethod;
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ClassInfoList;
 import org.apache.maven.project.MavenProject;
@@ -16,13 +15,15 @@ import java.util.List;
 
 public abstract class AbstractClassParser implements ClassParser {
 
-    protected final ResolvedClassLoader resolvedClassLoader = new ResolvedClassLoader();
     protected final ClassLoader classLoader;
+    protected final ClassParserConfig config;
+    protected final ResolvedClassLoader resolvedClassLoader = new ResolvedClassLoader();
 
     private ClassInfoList allRestControllers;
 
-    protected AbstractClassParser(MavenProject project) {
-        this.classLoader = new ClassLoader(project);
+    protected AbstractClassParser(final ClassParserConfig config) {
+        this.classLoader = new ClassLoader(config.project());
+        this.config = config;
     }
 
     private ClassInfoList getAllRestControllers() {
@@ -39,8 +40,8 @@ public abstract class AbstractClassParser implements ClassParser {
      * @return все методы из всех {@link RestController}
      */
     @Override
-    public List<RestControllerMethod> getAllMethods() {
-        var allRestControllerMethods = new ArrayList<RestControllerMethod>();
+    public List<ClassMethod> getAllRestControllersMethods() {
+        var allRestControllerMethods = new ArrayList<ClassMethod>();
         for (var restController : getAllRestControllers()) {
             var restClass = classLoader.loadErasedClass(restController.getName());
             var restClassType = resolvedClassLoader.resolveErasedType(restClass);
@@ -57,14 +58,14 @@ public abstract class AbstractClassParser implements ClassParser {
      * @param restController контроллер
      * @return методы конкретного контроллера
      */
-    private List<RestControllerMethod> collectRestControllerMethods(ResolvedMethod[] restMethods, ClassInfo restController) {
-        var methods = new ArrayList<RestControllerMethod>();
+    private List<ClassMethod> collectRestControllerMethods(ResolvedMethod[] restMethods, ClassInfo restController) {
+        var methods = new ArrayList<ClassMethod>();
         for (var restMethod : restMethods) {
-            var methodName = restController.getSimpleName().concat("_").concat(restMethod.getName());
+            var restControllerName = restController.getSimpleName().concat("_").concat(restMethod.getName());
             var response = restMethod.getReturnType();
             var request = getRequest(restMethod);
             var httpMethod = getHttpMethod(restMethod);
-            methods.add(new RestControllerMethod(methodName, request, response, httpMethod));
+            methods.add(new ClassMethod(restControllerName, request, response, httpMethod));
         }
         return methods;
     }
