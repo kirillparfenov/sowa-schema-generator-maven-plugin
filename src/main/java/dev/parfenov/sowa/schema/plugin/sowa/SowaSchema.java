@@ -7,5 +7,6 @@ public record SowaSchema(
         GeneratedResult request,
         GeneratedResult response,
         String restControllerName,
-        HttpMethod httpMethod
+        HttpMethod httpMethod,
+        String endpointUrl
 ) {}

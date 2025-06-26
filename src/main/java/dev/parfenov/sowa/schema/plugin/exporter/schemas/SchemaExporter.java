@@ -1,11 +1,10 @@
-package dev.parfenov.sowa.schema.plugin.exporter;
+package dev.parfenov.sowa.schema.plugin.exporter.schemas;
 
 import dev.parfenov.sowa.schema.plugin.sowa.SowaSchema;
 
-import java.io.IOException;
 import java.util.List;
 
-public interface Export {
+public interface SchemaExporter {
 
     /**
      * Экспорт схем

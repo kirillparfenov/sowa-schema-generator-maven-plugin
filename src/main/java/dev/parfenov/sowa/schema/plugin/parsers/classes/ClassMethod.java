@@ -1,4 +1,4 @@
-package dev.parfenov.sowa.schema.plugin.classparser;
+package dev.parfenov.sowa.schema.plugin.parsers.classes;
 
 import com.fasterxml.classmate.ResolvedType;
 import org.springframework.http.HttpMethod;
@@ -18,6 +18,11 @@ public record ClassMethod(
         ResolvedType response,
 
         /// HTTP-метод
-        HttpMethod httpMethod
+        HttpMethod httpMethod,
+
+        /// Адрес эндпоинта
+        String endpointUrl
+
+        //todo добавить перечисление всех параметров метода (для обработки @PathVariable)
 ) {
 }

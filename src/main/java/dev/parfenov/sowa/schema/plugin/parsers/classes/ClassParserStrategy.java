@@ -1,4 +1,4 @@
-package dev.parfenov.sowa.schema.plugin.classparser;
+package dev.parfenov.sowa.schema.plugin.parsers.classes;
 
 public class ClassParserStrategy {
     private ClassParserStrategy() {}

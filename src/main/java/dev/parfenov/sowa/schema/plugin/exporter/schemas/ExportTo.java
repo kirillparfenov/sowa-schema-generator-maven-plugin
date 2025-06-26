@@ -1,4 +1,4 @@
-package dev.parfenov.sowa.schema.plugin.exporter;
+package dev.parfenov.sowa.schema.plugin.exporter.schemas;
 
 /**
  * Указывает куда осуществлять экспорт

@@ -1,21 +1,18 @@
-package dev.parfenov.sowa.schema.plugin.exporter;
+package dev.parfenov.sowa.schema.plugin.exporter.schemas;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import dev.parfenov.sowa.schema.plugin.generator.GeneratedResult;
 import dev.parfenov.sowa.schema.plugin.sowa.SowaSchema;
-import org.apache.maven.project.MavenProject;
 import org.springframework.util.CollectionUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class ExportToTarget implements Export {
+import static dev.parfenov.sowa.schema.plugin.exporter.ExportDirectories.*;
 
-    private static final String SOWA_DIRECTORY = File.separator + "sowa";
-    private static final String REQUEST_DIRECTORY = File.separator + "request";
-    private static final String RESPONSE_DIRECTORY = File.separator + "response";
+public class ExportToTarget implements SchemaExporter {
 
     private final ExportConfig config;
     private final ObjectMapper mapper;

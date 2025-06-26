@@ -1,9 +1,11 @@
 package dev.parfenov.sowa.schema.plugin;
 
-import dev.parfenov.sowa.schema.plugin.classparser.ClassParserConfig;
-import dev.parfenov.sowa.schema.plugin.classparser.ClassParserStrategy;
-import dev.parfenov.sowa.schema.plugin.exporter.ExportConfig;
-import dev.parfenov.sowa.schema.plugin.exporter.ExportStrategy;
+import dev.parfenov.sowa.schema.plugin.exporter.infrastructure.InfraConfig;
+import dev.parfenov.sowa.schema.plugin.exporter.infrastructure.YamlExporter;
+import dev.parfenov.sowa.schema.plugin.parsers.classes.ClassParserConfig;
+import dev.parfenov.sowa.schema.plugin.parsers.classes.ClassParserStrategy;
+import dev.parfenov.sowa.schema.plugin.exporter.schemas.ExportConfig;
+import dev.parfenov.sowa.schema.plugin.exporter.schemas.ExportStrategy;
 import dev.parfenov.sowa.schema.plugin.generator.Generator;
 import dev.parfenov.sowa.schema.plugin.generator.GeneratorConfig;
 import dev.parfenov.sowa.schema.plugin.sowa.SowaSchemaGeneratorImpl;
@@ -16,6 +18,8 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
+import java.io.File;
+
 @Mojo(name = "generateSchema",
         defaultPhase = LifecyclePhase.COMPILE,
         requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME,
@@ -23,7 +27,16 @@ import org.apache.maven.project.MavenProject;
 )
 public class SowaGeneratorMojo extends AbstractMojo {
 
-    @Parameter(property = "git.diff.command", defaultValue = "git diff main --name-only")
+    @Parameter(property = "sowaProfileName", defaultValue = "SOWA_PROFILE_NAME")
+    private String sowaProfileName;
+
+    @Parameter(defaultValue = "${project.basedir}/src/main/resources/application.yml")
+    private File propertiesYamlFile;
+
+    @Parameter(defaultValue = "${project.basedir}/src/main/resources/application.properties")
+    private File propertiesFile;
+
+    @Parameter(property = "gitDiffCommand", defaultValue = "git diff main --name-only")
     private String gitDiffCommand;
 
     @Parameter(property = "onlyGitDiff", defaultValue = "false")
@@ -49,5 +62,7 @@ public class SowaGeneratorMojo extends AbstractMojo {
         var exportConfig = ExportConfig.toTarget(project, getLog());
         var exporter = ExportStrategy.getExporter(exportConfig);
         exporter.ifPresent(e -> e.export(sowaSchemas));
+        var infraExporter = new YamlExporter(new InfraConfig(project, sowaProfileName));
+        infraExporter.export(restControllersMethods);
     }
 }
