@@ -1,21 +1,21 @@
 package dev.parfenov.sowa.schema.plugin.classloader;
 
 import io.github.classgraph.ClassGraph;
-import io.github.classgraph.ScanResult;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 
 public class ClassLoader {
 
     private final MavenProject project;
+    private final List<URL> classpathElements = new ArrayList<>();
     private URLClassLoader classLoader;
+    private String packageName;
 
     public ClassLoader(MavenProject project) {
         this.project = project;
@@ -27,16 +27,8 @@ public class ClassLoader {
      * @return ClassLoader
      */
     public URLClassLoader getClassLoader() {
-        //todo synchronized через lock (для 21 java)
         if (this.classLoader == null) {
-            var urls = new ArrayList<URL>();
-            for (var url : getClasspathElements()) {
-                try {
-                    urls.add(new File(url).toURI().toURL());
-                } catch (MalformedURLException e) {
-                    throw new RuntimeException("Ошибка создания URL ", e);
-                }
-            }
+            var urls = getClasspathElements();
             this.classLoader = new URLClassLoader(
                     urls.toArray(new URL[0]),
                     Thread.currentThread().getContextClassLoader()
@@ -59,21 +51,37 @@ public class ClassLoader {
         }
     }
 
-    /**
-     * Сканирует classpath
-     *
-     * @return результат сканирования classpath
-     */
-    public ScanResult scanClasspath() {
-        ClassGraph classGraph = new ClassGraph()
-                .overrideClasspath(getClasspathElements())
-                .enableAllInfo();
-
-        return classGraph.scan();
+    public String baseProjectPackage() {
+        if (this.packageName != null) {
+            return this.packageName;
+        }
+        this.packageName = ClassloaderUtils.baseProjectPackage(project);
+        return this.packageName;
     }
 
-    private Collection<String> getClasspathElements() {
-        //classpathElements = project.getRuntimeClasspathElements(); //если нужно зависимости из других библиотек
-        return Collections.singleton(project.getBuild().getOutputDirectory());
+    public ClassGraph getClassgraph() {
+        return new ClassGraph()
+                .overrideClasspath(getClasspathElements())
+                .acceptPackages(baseProjectPackage())
+                .enableAllInfo();
+    }
+
+    private List<URL> getClasspathElements() {
+        if (!this.classpathElements.isEmpty()) {
+            return this.classpathElements;
+        }
+        try {
+            var classpathElements = new HashSet<String>();
+            classpathElements.addAll(project.getRuntimeClasspathElements());
+            classpathElements.addAll(project.getCompileClasspathElements());
+            var urls = new ArrayList<URL>(classpathElements.size());
+            for (var element : classpathElements) {
+                urls.add(new File(element).toURI().toURL());
+            }
+            this.classpathElements.addAll(urls);
+            return this.classpathElements;
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка во время получения classpath элементов", e);
+        }
     }
 }

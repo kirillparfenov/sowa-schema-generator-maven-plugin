@@ -13,9 +13,14 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
-@Mojo(name = "generateSchema", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
+@Mojo(name = "generateSchema",
+        defaultPhase = LifecyclePhase.COMPILE,
+        requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME,
+        requiresDependencyCollection = ResolutionScope.COMPILE_PLUS_RUNTIME
+)
 public class SowaGeneratorMojo extends AbstractMojo {
 
     @Parameter(property = "git.diff.command", defaultValue = "git diff main --name-only")
@@ -30,7 +35,7 @@ public class SowaGeneratorMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         // Парсинг классов и методов
-        var parserConfig = new ClassParserConfig(onlyGitDiff, gitDiffCommand, project);
+        var parserConfig = new ClassParserConfig(onlyGitDiff, gitDiffCommand, project, getLog());
         var classParser = ClassParserStrategy.getClassParser(parserConfig);
         var restControllersMethods = classParser.getAllRestControllersMethods();
 
@@ -41,7 +46,7 @@ public class SowaGeneratorMojo extends AbstractMojo {
         var sowaSchemas = sowaSchemaGenerator.generateSchema(restControllersMethods);
 
         // Экспорт
-        var exportConfig = ExportConfig.toTarget(project);
+        var exportConfig = ExportConfig.toTarget(project, getLog());
         var exporter = ExportStrategy.getExporter(exportConfig);
         exporter.ifPresent(e -> e.export(sowaSchemas));
     }

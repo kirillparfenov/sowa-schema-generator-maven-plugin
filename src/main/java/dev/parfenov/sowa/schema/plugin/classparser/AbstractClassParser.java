@@ -6,8 +6,8 @@ import dev.parfenov.sowa.schema.plugin.classloader.ClassLoader;
 import dev.parfenov.sowa.schema.plugin.classloader.ResolvedClassLoader;
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ClassInfoList;
-import org.apache.maven.project.MavenProject;
 import org.springframework.http.HttpMethod;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -19,21 +19,9 @@ public abstract class AbstractClassParser implements ClassParser {
     protected final ClassParserConfig config;
     protected final ResolvedClassLoader resolvedClassLoader = new ResolvedClassLoader();
 
-    private ClassInfoList allRestControllers;
-
     protected AbstractClassParser(final ClassParserConfig config) {
         this.classLoader = new ClassLoader(config.project());
         this.config = config;
-    }
-
-    private ClassInfoList getAllRestControllers() {
-        //todo synchronized через lock (21 java)
-        if (allRestControllers == null) {
-            try (var scanResult = classLoader.scanClasspath()) {
-                this.allRestControllers = scanResult.getClassesWithAnnotation(RestController.class);
-            }
-        }
-        return allRestControllers;
     }
 
     /**
@@ -41,8 +29,20 @@ public abstract class AbstractClassParser implements ClassParser {
      */
     @Override
     public List<ClassMethod> getAllRestControllersMethods() {
+        try (var scanResult = classLoader.getClassgraph().scan()) {
+            var foundRestMethods = scanResult.getClassesWithAnyAnnotation(RestController.class, Controller.class);
+            return collectRestControllerMethods(foundRestMethods);
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка во время сканирования графа классов", e);
+        }
+    }
+
+    private List<ClassMethod> collectRestControllerMethods(ClassInfoList classInfoList) {
         var allRestControllerMethods = new ArrayList<ClassMethod>();
-        for (var restController : getAllRestControllers()) {
+        for (var restController : classInfoList) {
+            if (!restController.getPackageInfo().getName().startsWith(classLoader.baseProjectPackage())) {
+                continue;
+            }
             var restClass = classLoader.loadErasedClass(restController.getName());
             var restClassType = resolvedClassLoader.resolveErasedType(restClass);
             var restClassMethods = resolvedClassLoader.resolveTypeMembers(restClassType).getMemberMethods();
