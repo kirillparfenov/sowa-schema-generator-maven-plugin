@@ -78,6 +78,7 @@ public class ExportToTarget implements Export {
     private void writeFile(File file, ObjectNode node) throws IOException {
         if (!file.exists()) {
             mapper.writerWithDefaultPrettyPrinter().writeValue(file, node);
+            config.log().info("Сгенерирована схема: %s".formatted(file.getPath()));
         }
     }
 }
