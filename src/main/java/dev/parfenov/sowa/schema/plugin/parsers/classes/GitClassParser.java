@@ -1,7 +1,6 @@
-package dev.parfenov.sowa.schema.plugin.classparser;
+package dev.parfenov.sowa.schema.plugin.parsers.classes;
 
 import dev.parfenov.sowa.schema.plugin.git.Git;
-import org.apache.maven.project.MavenProject;
 
 public class GitClassParser extends AbstractClassParser {
 

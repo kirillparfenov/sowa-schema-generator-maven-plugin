@@ -1,7 +1,7 @@
 package dev.parfenov.sowa.schema.plugin.sowa;
 
 import com.fasterxml.classmate.ResolvedType;
-import dev.parfenov.sowa.schema.plugin.classparser.ClassMethod;
+import dev.parfenov.sowa.schema.plugin.parsers.classes.ClassMethod;
 import dev.parfenov.sowa.schema.plugin.generator.GeneratedResult;
 import dev.parfenov.sowa.schema.plugin.generator.Generator;
 import org.springframework.util.CollectionUtils;
@@ -37,7 +37,7 @@ public class SowaSchemaGeneratorImpl implements SowaSchemaGenerator {
         var restName = restMethod.restControllerMethodName();
         var request = generate(restMethod.request(), restName.concat(REQUEST_SUFFIX));
         var response = generate(restMethod.response(), restName.concat(RESPONSE_SUFFIX));
-        return new SowaSchema(request, response, restName, restMethod.httpMethod());
+        return new SowaSchema(request, response, restName, restMethod.httpMethod(), restMethod.endpointUrl());
     }
 
     private GeneratedResult generate(ResolvedType type, String schemaName) {
