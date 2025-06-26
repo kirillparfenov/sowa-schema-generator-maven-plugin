@@ -3,7 +3,6 @@ package dev.parfenov.sowa.schema.plugin.generator;
 import com.github.victools.jsonschema.generator.*;
 import com.github.victools.jsonschema.module.jackson.JacksonModule;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationOption;
-import com.github.victools.jsonschema.module.swagger2.Swagger2Module;
 
 public class GeneratorConfig {
 
@@ -12,7 +11,6 @@ public class GeneratorConfig {
     public GeneratorConfig() {
         var configBuilder = new SchemaGeneratorConfigBuilder(SchemaVersion.DRAFT_7, OptionPreset.PLAIN_JSON)
                 .with(new JacksonModule())
-                .with(new Swagger2Module())
                 .with(Option.SCHEMA_VERSION_INDICATOR)
                 .with(Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT)
                 .with(Option.NULLABLE_ARRAY_ITEMS_ALLOWED)
