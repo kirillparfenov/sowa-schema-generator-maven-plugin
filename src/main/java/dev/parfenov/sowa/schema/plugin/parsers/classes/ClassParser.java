@@ -12,5 +12,5 @@ public interface ClassParser {
     /**
      * @return массив найденных методов в классах с аннотацией {@link RestController}
      * */
-    List<ClassMethod> getAllRestControllersMethods();
+    List<ClassMethod> findAllRestControllerMethods();
 }

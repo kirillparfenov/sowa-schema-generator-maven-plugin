@@ -1,7 +1,7 @@
 package dev.parfenov.sowa.schema.plugin;
 
-import dev.parfenov.sowa.schema.plugin.exporter.infrastructure.InfraConfig;
-import dev.parfenov.sowa.schema.plugin.exporter.infrastructure.YamlExporter;
+import dev.parfenov.sowa.schema.plugin.exporter.infra.InfraConfig;
+import dev.parfenov.sowa.schema.plugin.exporter.infra.YamlExporter;
 import dev.parfenov.sowa.schema.plugin.parsers.classes.ClassParserConfig;
 import dev.parfenov.sowa.schema.plugin.parsers.classes.ClassParserStrategy;
 import dev.parfenov.sowa.schema.plugin.exporter.schemas.ExportConfig;
@@ -30,12 +30,6 @@ public class SowaGeneratorMojo extends AbstractMojo {
     @Parameter(property = "sowaProfileName", defaultValue = "SOWA_PROFILE_NAME")
     private String sowaProfileName;
 
-    @Parameter(defaultValue = "${project.basedir}/src/main/resources/application.yml")
-    private File propertiesYamlFile;
-
-    @Parameter(defaultValue = "${project.basedir}/src/main/resources/application.properties")
-    private File propertiesFile;
-
     @Parameter(property = "gitDiffCommand", defaultValue = "git diff main --name-only")
     private String gitDiffCommand;
 
@@ -50,9 +44,9 @@ public class SowaGeneratorMojo extends AbstractMojo {
         // Парсинг классов и методов
         var parserConfig = new ClassParserConfig(onlyGitDiff, gitDiffCommand, project, getLog());
         var classParser = ClassParserStrategy.getClassParser(parserConfig);
-        var restControllersMethods = classParser.getAllRestControllersMethods();
+        var restControllersMethods = classParser.findAllRestControllerMethods();
 
-        // Генерация
+        // Генерация схем
         var generatorConfig = new GeneratorConfig();
         var generator = new Generator(generatorConfig);
         var sowaSchemaGenerator = new SowaSchemaGeneratorImpl(generator);

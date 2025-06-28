@@ -1,28 +1,57 @@
 package dev.parfenov.sowa.schema.plugin.parsers.properties;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.apache.maven.project.MavenProject;
+
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
 
 public class PropertiesParser {
 
-    public String getServletContextPath(File... propertiesFiles) {
-        for (File propertiesFile : propertiesFiles) {
-            if (!propertiesFile.exists()) continue;
+    private PropertiesParser() {}
 
-            var path = propertiesFile.getPath();
-            return path.endsWith(".properties")
-                    ? parseProperties(propertiesFile)
-                    : parseYaml(propertiesFile);
+    public static String contextPath(MavenProject project) {
+        var resources = new File(project.getBasedir(), "src/main/resources");
+        if (!resources.exists() || !resources.isDirectory()) {
+            return "";
+        }
+        for (var resource : resources.listFiles()) {
+            if (!resource.isFile()) {
+                continue;
+            }
+            if (resource.getName().startsWith("application.y")) {
+                return parseYaml(resource);
+            } else if (resource.getName().startsWith("application.properties")) {
+                return parseProperties(resource);
+            }
+
         }
         return "";
     }
 
-    private String parseYaml(File file) {
-        //todo finish
-        return "";
+    private static String parseYaml(File file) {
+        var mapper = new ObjectMapper(new YAMLFactory());
+        try {
+            return mapper.readTree(file)
+                    .path("server")
+                    .path("servlet")
+                    .path("context-path")
+                    .asText("");
+        } catch (IOException e) {
+            throw new RuntimeException("Ошибка парсинга " + file.getName(), e);
+        }
     }
 
-    private String parseProperties(File file) {
-        //todo finish
-        return "";
+    private static String parseProperties(File file) {
+        try {
+            var properties = new Properties();
+            properties.load(new FileInputStream(file));
+            return properties.getProperty("server.servlet.context-path", "");
+        } catch (IOException e) {
+            throw new RuntimeException("Ошибка парсинга " + file.getName(), e);
+        }
     }
 }

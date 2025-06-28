@@ -1,10 +1,10 @@
-package dev.parfenov.sowa.schema.plugin.exporter.infrastructure;
+package dev.parfenov.sowa.schema.plugin.exporter.infra;
 
 import dev.parfenov.sowa.schema.plugin.parsers.classes.ClassMethod;
 
 import java.util.List;
 
-public interface InfrastructureExporter {
+public interface InfraExporter {
 
     /**
      * Экспорт обвязки SOWA
