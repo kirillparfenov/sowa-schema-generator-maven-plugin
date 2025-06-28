@@ -34,7 +34,7 @@ public class SowaSchemaGeneratorImpl implements SowaSchemaGenerator {
     }
 
     private SowaSchema generate(ClassMethod restMethod) {
-        var restName = restMethod.restControllerMethodName();
+        var restName = restMethod.endpointName();
         var request = generate(restMethod.request(), restName.concat(REQUEST_SUFFIX));
         var response = generate(restMethod.response(), restName.concat(RESPONSE_SUFFIX));
         return new SowaSchema(request, response, restName, restMethod.httpMethod(), restMethod.endpointUrl());

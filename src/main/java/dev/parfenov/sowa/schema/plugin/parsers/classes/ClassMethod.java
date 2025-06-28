@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 public record ClassMethod(
         /// Имя метода для SOWA
-        String restControllerMethodName,
+        String endpointName,
 
         /// Тело запроса
         ResolvedType request,
@@ -22,7 +22,4 @@ public record ClassMethod(
 
         /// Адрес эндпоинта
         String endpointUrl
-
-        //todo добавить перечисление всех параметров метода (для обработки @PathVariable)
-) {
-}
+) {}

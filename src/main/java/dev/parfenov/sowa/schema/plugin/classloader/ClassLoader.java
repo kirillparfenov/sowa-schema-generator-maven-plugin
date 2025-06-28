@@ -62,6 +62,7 @@ public class ClassLoader {
     public ClassGraph getClassgraph() {
         return new ClassGraph()
                 .overrideClasspath(getClasspathElements())
+                .overrideClassLoaders(getClassLoader())
                 .acceptPackages(baseProjectPackage())
                 .enableAllInfo();
     }

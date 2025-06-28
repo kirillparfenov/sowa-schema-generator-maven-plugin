@@ -1,4 +1,4 @@
-package dev.parfenov.sowa.schema.plugin.exporter.infrastructure;
+package dev.parfenov.sowa.schema.plugin.exporter.infra;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import dev.parfenov.sowa.schema.plugin.parsers.classes.ClassMethod;
@@ -11,7 +11,7 @@ import java.util.List;
 import static dev.parfenov.sowa.schema.plugin.exporter.ExportDirectories.INFRASTRUCTURE_DIRECTORY;
 import static dev.parfenov.sowa.schema.plugin.exporter.ExportDirectories.SOWA_DIRECTORY;
 
-public class YamlExporter implements InfrastructureExporter {
+public class YamlExporter implements InfraExporter {
 
     private final InfraConfig infraConfig;
 
@@ -26,8 +26,8 @@ public class YamlExporter implements InfrastructureExporter {
         var servicesYaml = new ArrayList<ServicesYaml>();
         for (var classMethod : classMethods) {
             var serviceYaml = new ServicesYaml();
-            serviceYaml.setId(classMethod.restControllerMethodName());
-            serviceYaml.setName(classMethod.restControllerMethodName());
+            serviceYaml.setId(classMethod.endpointName());
+            serviceYaml.setName(classMethod.endpointName());
             serviceYaml.setUrl("^" + classMethod.endpointUrl());
 
             var allowedQuery = new ServicesYaml.AllowedQuery();
@@ -42,7 +42,7 @@ public class YamlExporter implements InfrastructureExporter {
                     "schemes/json/"
                             .concat(infraConfig.sowaProfileName())
                             .concat("/response/")
-                            .concat(classMethod.restControllerMethodName())
+                            .concat(classMethod.endpointName())
                             .concat("_response.json")
             );
             response.setAllowEmptyBody(true);
