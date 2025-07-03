@@ -4,6 +4,8 @@ import com.fasterxml.classmate.ResolvedType;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 /**
  * Метод из класса с аннотацией {@link RestController}
  */
@@ -21,5 +23,8 @@ public record ClassMethod(
         HttpMethod httpMethod,
 
         /// Адрес эндпоинта
-        String endpointUrl
+        String endpointUrl,
+
+        /// Переменные пути запроса
+        List<PathVariableParam> pathVariableParams
 ) {}

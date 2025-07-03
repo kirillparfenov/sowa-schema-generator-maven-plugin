@@ -81,8 +81,7 @@ public abstract class AbstractClassParser implements ClassParser {
             var endpointPath = endpointPathResolver.resolve(controllerClass, restMethod);
             //todo закончить: (нужно будет для составления регулярок в endpointPath)
             var pathVariables = endpointPathResolver.pathVariableArguments(restMethod);
-            System.out.println("path variables: " + pathVariables);
-            methods.add(new ClassMethod(endpointName, request, response, httpMethod, endpointPath));
+            methods.add(new ClassMethod(endpointName, request, response, httpMethod, endpointPath, pathVariables));
         }
         return methods;
     }
