@@ -1,7 +1,7 @@
 package dev.parfenov.sowa.schema.plugin;
 
 import dev.parfenov.sowa.schema.plugin.exporter.infra.InfraConfig;
-import dev.parfenov.sowa.schema.plugin.exporter.infra.YamlExporter;
+import dev.parfenov.sowa.schema.plugin.exporter.infra.InfraExporterImpl;
 import dev.parfenov.sowa.schema.plugin.parsers.classes.ClassParserConfig;
 import dev.parfenov.sowa.schema.plugin.parsers.classes.ClassParserStrategy;
 import dev.parfenov.sowa.schema.plugin.exporter.schemas.ExportConfig;
@@ -17,8 +17,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-
-import java.io.File;
 
 @Mojo(name = "generateSchema",
         defaultPhase = LifecyclePhase.COMPILE,
@@ -56,7 +54,7 @@ public class SowaGeneratorMojo extends AbstractMojo {
         var exportConfig = ExportConfig.toTarget(project, getLog());
         var exporter = ExportStrategy.getExporter(exportConfig);
         exporter.ifPresent(e -> e.export(sowaSchemas));
-        var infraExporter = new YamlExporter(new InfraConfig(project, sowaProfileName));
+        var infraExporter = new InfraExporterImpl(new InfraConfig(project, sowaProfileName));
         infraExporter.export(restControllersMethods);
     }
 }

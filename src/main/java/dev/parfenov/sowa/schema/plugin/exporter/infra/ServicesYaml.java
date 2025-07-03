@@ -106,28 +106,28 @@ public class ServicesYaml {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class ValidatorJson {
-        private List<Request> response;
-        private List<Request> request;
+        private List<RequestResponse> response;
+        private List<RequestResponse> request;
 
-        public List<Request> getResponse() {
+        public List<RequestResponse> getResponse() {
             return response;
         }
 
-        public void setResponse(List<Request> response) {
+        public void setResponse(List<RequestResponse> response) {
             this.response = response;
         }
 
-        public List<Request> getRequest() {
+        public List<RequestResponse> getRequest() {
             return request;
         }
 
-        public void setRequest(List<Request> request) {
+        public void setRequest(List<RequestResponse> request) {
             this.request = request;
         }
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class Request {
+    public static class RequestResponse {
         private String method;
         private String schema;
         @JsonProperty("allow_empty_body")
