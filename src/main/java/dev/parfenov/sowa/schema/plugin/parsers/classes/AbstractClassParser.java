@@ -21,7 +21,7 @@ public abstract class AbstractClassParser implements ClassParser {
     protected final ResolvedClassLoader resolvedClassLoader = new ResolvedClassLoader();
 
     protected AbstractClassParser(final ClassParserConfig config) {
-        this.classLoader = new ClassLoader(config.project());
+        this.classLoader = new ClassLoader(config);
         this.config = config;
         this.endpointPathResolver = new EndpointPathResolver(config);
     }
@@ -32,9 +32,10 @@ public abstract class AbstractClassParser implements ClassParser {
     @Override
     public List<ClassMethod> findAllRestControllerMethods() {
         try (var scanResult = classLoader.getClassgraph().scan()) {
-            var restControllerClasses = scanResult
-                    .getClassesWithAnyAnnotation(RestController.class, Controller.class)
-                    .filter(this::pass);
+            var restControllerClasses =
+                    scanResult
+                            .getClassesWithAnyAnnotation(RestController.class, Controller.class)
+                            .filter(this::pass);
             return collectRestControllerMethods(restControllerClasses);
         } catch (Exception e) {
             throw new RuntimeException("Ошибка во время сканирования графа классов", e);
