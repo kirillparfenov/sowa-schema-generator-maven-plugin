@@ -1,7 +1,7 @@
 package dev.parfenov.sowa.schema.plugin.classloader;
 
+import dev.parfenov.sowa.schema.plugin.parsers.classes.ClassParserConfig;
 import io.github.classgraph.ClassGraph;
-import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.net.URL;
@@ -12,13 +12,12 @@ import java.util.List;
 
 public class ClassLoader {
 
-    private final MavenProject project;
     private final List<URL> classpathElements = new ArrayList<>();
+    private final ClassParserConfig config;
     private URLClassLoader classLoader;
-    private String packageName;
 
-    public ClassLoader(MavenProject project) {
-        this.project = project;
+    public ClassLoader(final ClassParserConfig config) {
+        this.config = config;
     }
 
     /**
@@ -52,11 +51,7 @@ public class ClassLoader {
     }
 
     public String baseProjectPackage() {
-        if (this.packageName != null) {
-            return this.packageName;
-        }
-        this.packageName = ClassloaderUtils.baseProjectPackage(project);
-        return this.packageName;
+        return config.projectBasePackage();
     }
 
     public ClassGraph getClassgraph() {
@@ -73,8 +68,8 @@ public class ClassLoader {
         }
         try {
             var classpathElements = new HashSet<String>();
-            classpathElements.addAll(project.getRuntimeClasspathElements());
-            classpathElements.addAll(project.getCompileClasspathElements());
+            classpathElements.addAll(config.project().getRuntimeClasspathElements());
+            classpathElements.addAll(config.project().getCompileClasspathElements());
             var urls = new ArrayList<URL>(classpathElements.size());
             for (var element : classpathElements) {
                 urls.add(new File(element).toURI().toURL());

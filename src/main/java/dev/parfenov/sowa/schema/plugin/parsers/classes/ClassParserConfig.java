@@ -7,6 +7,7 @@ public record ClassParserConfig(
         boolean onlyGitDiff,
         String gitDiffCommand,
         MavenProject project,
-        Log logger
+        Log logger,
+        String projectBasePackage
 ) {
 }
