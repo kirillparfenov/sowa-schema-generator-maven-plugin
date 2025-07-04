@@ -1,5 +1,6 @@
 package dev.parfenov.sowa.schema.plugin.parsers.classes;
 
+import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.RestClass;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -12,5 +13,5 @@ public interface ClassParser {
     /**
      * @return массив найденных методов в классах с аннотацией {@link RestController}
      * */
-    List<ClassMethod> findAllRestControllerMethods();
+    List<RestClass> parseAllRestClasses();
 }

@@ -1,51 +1,53 @@
 package dev.parfenov.sowa.schema.plugin.parsers.classes;
 
-import com.fasterxml.classmate.members.ResolvedMethod;
+import dev.parfenov.sowa.schema.plugin.generator.Regex;
+import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.RestClass;
+import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.RestClassMethod;
 import dev.parfenov.sowa.schema.plugin.parsers.properties.PropertiesParser;
 import io.github.classgraph.ClassInfo;
+import org.apache.maven.project.MavenProject;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.UUID;
 
 
 public class EndpointPathResolver {
 
-    private final ClassParserConfig config;
+    private final MavenProject mavenProject;
 
-    public EndpointPathResolver(ClassParserConfig config) {
-        this.config = config;
+    public EndpointPathResolver(final MavenProject mavenProject) {
+        this.mavenProject = mavenProject;
     }
 
-    public List<PathVariableParam> pathVariableArguments(ResolvedMethod method) {
-        var pathVariableArguments = new ArrayList<PathVariableParam>();
-        for (var parameter : method.getRawMember().getParameters()) {
-            var pathVariable = AnnotationResolver.findDirectOnParameter(PathVariable.class, parameter);
-            if (pathVariable != null) {
-                var paramName = pathVariable.value().isBlank()
-                        ? parameter.getName()
-                        : pathVariable.value();
-                pathVariableArguments.add(new PathVariableParam(paramName, parameter.getType()));
-            }
+    public String resolvePathWithVariables(RestClass restClass, RestClassMethod restMethod) {
+        var fullPath = "^" + contextPath() + restClass.getEndpointPath() + restMethod.getEndpointPath() + "$";
+        var pathVariables = restMethod.getPathVariables();
+        if (pathVariables == null || pathVariables.isEmpty()) {
+            return fullPath;
         }
-        return pathVariableArguments;
+
+        for (var pathVariable : pathVariables) {
+            var name = "\\{" + pathVariable.getParamName() + "}";
+            var typeName = pathVariable.getParamType().getTypeName();
+            var regex = Regex.getRegexOrDefault(typeName);
+            fullPath = fullPath.replaceAll(name, regex);
+        }
+        return fullPath;
     }
 
-    public String resolve(ClassInfo controllerClass, ResolvedMethod method) {
-        var contextPath = contextPath();
-        var pathOnClass = pathOnClass(controllerClass);
-        var pathOnMethod = pathOnMethod(method);
-        return contextPath.concat(pathOnClass).concat(pathOnMethod);
+    public String contextPath() {
+        return PropertiesParser.contextPath(mavenProject);
     }
 
-    private String contextPath() {
-        return PropertiesParser.contextPath(config.project());
+    public String endpointToSchema(RestClass restClass, RestClassMethod restMethod) {
+        return restClass.getName().concat("_").concat(restMethod.getName());
     }
 
-    private String pathOnClass(ClassInfo controllerClass) {
+    public String pathOnClass(ClassInfo controllerClass) {
         var requestMapping = AnnotationResolver.findDirectOnClass(RequestMapping.class, controllerClass);
         if (requestMapping != null) {
-            //todo добавить обработку когда интерфейс extends интерфейс и там @RequestMapping
             if (requestMapping.value().length > 0) {
                 return cleanSlashes(requestMapping.value()[0]);
             }
@@ -53,7 +55,7 @@ public class EndpointPathResolver {
         return "";
     }
 
-    private String pathOnMethod(ResolvedMethod method) {
+    public String pathOnMethod(Method method) {
         var requestMapping = AnnotationResolver.findDirectOnMethod(RequestMapping.class, method);
         if (requestMapping != null) {
             if (requestMapping.value().length > 0) {
@@ -105,5 +107,4 @@ public class EndpointPathResolver {
         }
         return path.startsWith("/") ? path : "/" + path;
     }
-
 }

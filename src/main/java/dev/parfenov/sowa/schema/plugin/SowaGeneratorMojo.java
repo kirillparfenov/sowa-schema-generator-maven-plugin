@@ -44,19 +44,19 @@ public class SowaGeneratorMojo extends AbstractMojo {
         // Парсинг классов и методов
         var parserConfig = new ClassParserConfig(onlyGitDiff, gitDiffCommand, project, getLog(), projectPackage);
         var classParser = ClassParserStrategy.getClassParser(parserConfig);
-        var restControllersMethods = classParser.findAllRestControllerMethods();
+        var restControllers = classParser.parseAllRestClasses();
 
         // Генерация схем
         var generatorConfig = new GeneratorConfig();
         var generator = new Generator(generatorConfig);
-        var sowaSchemaGenerator = new SowaSchemaGeneratorImpl(generator);
-        var sowaSchemas = sowaSchemaGenerator.generateSchema(restControllersMethods);
+        var sowaSchemaGenerator = new SowaSchemaGeneratorImpl(generator, project);
+        var sowaSchemas = sowaSchemaGenerator.generateSchema(restControllers);
 
         // Экспорт
         var exportConfig = ExportConfig.toTarget(project, getLog());
         var exporter = ExportStrategy.getExporter(exportConfig);
         exporter.ifPresent(e -> e.export(sowaSchemas));
         var infraExporter = new InfraExporterImpl(new InfraConfig(project, sowaProfileName));
-        infraExporter.export(restControllersMethods);
+        infraExporter.export(restControllers);
     }
 }

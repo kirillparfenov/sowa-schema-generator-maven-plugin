@@ -1,6 +1,5 @@
 package dev.parfenov.sowa.schema.plugin.generator;
 
-import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -8,6 +7,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaKeyword;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -25,7 +25,7 @@ public class Generator {
         this.generatorConfig = config;
     }
 
-    public ObjectNode generate(ResolvedType type) {
+    public ObjectNode generate(Type type) {
         var mainSchema = schemaGenerator.generateSchema(type);
         replaceRef(mainSchema);
         return mainSchema;

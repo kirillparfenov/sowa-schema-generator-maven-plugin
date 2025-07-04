@@ -11,25 +11,32 @@ import java.util.Properties;
 
 public class PropertiesParser {
 
+    private static String CONTEXT_PATH = "";
+
     private PropertiesParser() {}
 
     public static String contextPath(MavenProject project) {
+        if (!CONTEXT_PATH.isBlank()) return CONTEXT_PATH;
+
         var resources = new File(project.getBasedir(), "src/main/resources");
         if (!resources.exists() || !resources.isDirectory()) {
-            return "";
+            return CONTEXT_PATH;
         }
+
         for (var resource : resources.listFiles()) {
             if (!resource.isFile()) {
                 continue;
             }
             if (resource.getName().startsWith("application.y")) {
-                return parseYaml(resource);
+                CONTEXT_PATH = parseYaml(resource);
+                return CONTEXT_PATH;
             } else if (resource.getName().startsWith("application.properties")) {
-                return parseProperties(resource);
+                CONTEXT_PATH =  parseProperties(resource);
+                return CONTEXT_PATH;
             }
 
         }
-        return "";
+        return CONTEXT_PATH;
     }
 
     private static String parseYaml(File file) {

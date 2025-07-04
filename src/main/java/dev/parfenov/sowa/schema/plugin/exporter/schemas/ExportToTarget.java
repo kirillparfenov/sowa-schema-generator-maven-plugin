@@ -45,8 +45,8 @@ public class ExportToTarget implements SchemaExporter {
 
     private void exportJson(File requestDir, File responseDir, List<SowaSchema> sowaSchemas) throws IOException {
         for (var sowaSchema : sowaSchemas) {
-            exportJson(requestDir, sowaSchema.request());
-            exportJson(responseDir, sowaSchema.response());
+            exportJson(requestDir, sowaSchema.getRequest());
+            exportJson(responseDir, sowaSchema.getResponse());
         }
     }
 

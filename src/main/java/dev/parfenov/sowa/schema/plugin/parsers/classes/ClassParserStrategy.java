@@ -8,6 +8,6 @@ public class ClassParserStrategy {
             return new GitClassParser(config);
         }
 
-        return new AllClassPathParser(config);
+        return new SimpleParser(config);
     }
 }

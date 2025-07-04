@@ -1,7 +1,9 @@
 package dev.parfenov.sowa.schema.plugin.exporter.infra;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import dev.parfenov.sowa.schema.plugin.parsers.classes.ClassMethod;
+import dev.parfenov.sowa.schema.plugin.parsers.classes.EndpointPathResolver;
+import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.RestClass;
+import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.RestClassMethod;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,58 +15,64 @@ import static dev.parfenov.sowa.schema.plugin.exporter.ExportDirectories.SOWA_DI
 
 public class InfraExporterImpl implements InfraExporter {
 
-    private final InfraConfig infraConfig;
+    private static final String SCHEMA_PREFIX = "schemes/json/";
+    private static final String RESPONSE_SUFFIX = "_response.json";
+    private static final String REQUEST_SUFFIX = "_request.json";
 
-    public InfraExporterImpl(InfraConfig infraConfig) {
+    private final InfraConfig infraConfig;
+    private final EndpointPathResolver endpointPathResolver;
+
+    public InfraExporterImpl(final InfraConfig infraConfig) {
         this.infraConfig = infraConfig;
+        this.endpointPathResolver = new EndpointPathResolver(infraConfig.project());
     }
 
     //todo привести в порядок этот бардак
 
-    public ServicesYaml.RequestResponse buildRequest(ClassMethod classMethod) {
-        if (classMethod.request() == null) return null;
+    public ServicesYaml.RequestResponse buildRequest(RestClassMethod method, String idName) {
+        if (method.getRequest() == null) return null;
 
         var requestResponse = new ServicesYaml.RequestResponse();
-        requestResponse.setMethod(classMethod.httpMethod().name().toLowerCase());
+        requestResponse.setMethod(method.getHttpMethod().name().toLowerCase());
         requestResponse.setSchema(
-                "schemes/json/"
+                SCHEMA_PREFIX
                         .concat(infraConfig.sowaProfileName())
                         .concat("/request/")
-                        .concat(classMethod.endpointName())
-                        .concat("_request.json")
+                        .concat(idName)
+                        .concat(REQUEST_SUFFIX)
         );
         requestResponse.setAllowEmptyBody(true);
         return requestResponse;
     }
 
-    private ServicesYaml.RequestResponse buildResponse(ClassMethod classMethod) {
-        if (classMethod.request() == null) return null;
+    private ServicesYaml.RequestResponse buildResponse(RestClassMethod method, String idName) {
+        if (method.getResponse() == null) return null;
 
         var response = new ServicesYaml.RequestResponse();
-        response.setMethod(classMethod.httpMethod().name().toLowerCase());
+        response.setMethod(method.getHttpMethod().name().toLowerCase());
         response.setSchema(
-                "schemes/json/"
+                SCHEMA_PREFIX
                         .concat(infraConfig.sowaProfileName())
                         .concat("/response/")
-                        .concat(classMethod.endpointName())
-                        .concat("_response.json")
+                        .concat(idName)
+                        .concat(RESPONSE_SUFFIX)
         );
         response.setAllowEmptyBody(true);
         var responseCode = new ServicesYaml.ResponseCode();
-        responseCode.setOperator('=');
-        responseCode.setPattern("200");
+        responseCode.setOperator('~');
+        responseCode.setPattern("^2\\d{2}$");
         response.setResponseCode(responseCode);
         return response;
     }
 
-    private ServicesYaml.RequestResponse buildError400Response(ClassMethod classMethod) {
+    private ServicesYaml.RequestResponse buildError400Response(RestClassMethod restClassMethod) {
         var response = new ServicesYaml.RequestResponse();
-        response.setMethod(classMethod.httpMethod().name().toLowerCase());
+        response.setMethod(restClassMethod.getHttpMethod().name().toLowerCase());
         response.setSchema(
-                "schemes/json/"
+                SCHEMA_PREFIX
                         .concat(infraConfig.sowaProfileName())
                         .concat("/response/")
-                        .concat("error_response_4XXX.json")
+                        .concat("error_response_4XX.json")
         );
         response.setAllowEmptyBody(true);
         var responseCode = new ServicesYaml.ResponseCode();
@@ -75,59 +83,65 @@ public class InfraExporterImpl implements InfraExporter {
     }
 
     @Override
-    public void export(List<ClassMethod> classMethods) {
+    public void export(List<RestClass> restClasses) {
         var servicesYaml = new ArrayList<ServicesYaml>();
-        for (var classMethod : classMethods) {
-            var serviceYaml = new ServicesYaml();
-            serviceYaml.setId(classMethod.endpointName());
-            serviceYaml.setName(classMethod.endpointName());
-            serviceYaml.setUrl("^" + classMethod.endpointUrl());
+        for (var restClass : restClasses) {
+            for (var restMethod : restClass.getMethods()) {
+                var serviceYaml = new ServicesYaml();
+                var endpointToSchema = endpointPathResolver.endpointToSchema(restClass, restMethod);
+                serviceYaml.setId(endpointToSchema);
+                serviceYaml.setName(endpointToSchema);
+                var fullPathWithRegex = endpointPathResolver.resolvePathWithVariables(restClass, restMethod);
+                serviceYaml.setUrl(fullPathWithRegex);
 
-            var allowedQuery = new ServicesYaml.AllowedQuery();
-            allowedQuery.setMethod(classMethod.httpMethod().name().toLowerCase());
-            serviceYaml.setAllowedQueries(List.of(allowedQuery));
+                var allowedQuery = new ServicesYaml.AllowedQuery();
+                if (restMethod.getHttpMethod() != null) {
+                    allowedQuery.setMethod(restMethod.getHttpMethod().name().toLowerCase());
+                }
+                serviceYaml.setAllowedQueries(List.of(allowedQuery));
 
-            var responses = new ArrayList<ServicesYaml.RequestResponse>();
-            var requests = new ArrayList<ServicesYaml.RequestResponse>();
+                var responses = new ArrayList<ServicesYaml.RequestResponse>();
+                var requests = new ArrayList<ServicesYaml.RequestResponse>();
 
-            var response = buildResponse(classMethod);
-            if (response != null) {
-                responses.add(response);
+                var response = buildResponse(restMethod, endpointToSchema);
+                if (response != null) {
+                    responses.add(response);
+                }
+                var error4XXResponse = buildError400Response(restMethod);
+                if (error4XXResponse != null) {
+                    responses.add(error4XXResponse);
+                }
+
+                var request = buildRequest(restMethod, endpointToSchema);
+                if (request != null) {
+                    requests.add(request);
+                }
+
+                var jsonValidator = new ServicesYaml.ValidatorJson();
+                if (!responses.isEmpty()) {
+                    jsonValidator.setResponse(responses);
+                }
+                if (!requests.isEmpty()) {
+                    jsonValidator.setRequest(requests);
+                }
+
+                var validator = new ServicesYaml.Validator();
+                validator.setValidatorJson(jsonValidator);
+                serviceYaml.setValidators(validator);
+
+                servicesYaml.add(serviceYaml);
             }
-            var error4XXResponse = buildError400Response(classMethod);
-            if (error4XXResponse != null) {
-                responses.add(error4XXResponse);
+
+            var sowaDir = new File(infraConfig.project().getBuild().getDirectory(), SOWA_DIRECTORY);
+            var servicesDir = new File(sowaDir, INFRASTRUCTURE_DIRECTORY);
+            servicesDir.mkdirs();
+            var servicesYamlFile = new File(servicesDir, "services.yml");
+            var yamlMapper = new YAMLMapper();
+            try {
+                yamlMapper.writeValue(servicesYamlFile, servicesYaml);
+            } catch (IOException e) {
+                throw new RuntimeException("Ошибка во время экспорта services.yml", e);
             }
-
-            var request = buildRequest(classMethod);
-            if (request != null) {
-                requests.add(request);
-            }
-
-            var jsonValidator = new ServicesYaml.ValidatorJson();
-            if (!responses.isEmpty()) {
-                jsonValidator.setResponse(responses);
-            }
-            if (!requests.isEmpty()) {
-                jsonValidator.setRequest(requests);
-            }
-
-            var validator = new ServicesYaml.Validator();
-            validator.setValidatorJson(jsonValidator);
-            serviceYaml.setValidators(validator);
-
-            servicesYaml.add(serviceYaml);
-        }
-
-        var sowaDir = new File(infraConfig.project().getBuild().getDirectory(), SOWA_DIRECTORY);
-        var servicesDir = new File(sowaDir, INFRASTRUCTURE_DIRECTORY);
-        servicesDir.mkdirs();
-        var servicesYamlFile = new File(servicesDir, "services.yml");
-        var yamlMapper = new YAMLMapper();
-        try {
-            yamlMapper.writeValue(servicesYamlFile, servicesYaml);
-        } catch (IOException e) {
-            throw new RuntimeException("Ошибка во время экспорта services.yml", e);
         }
     }
 }
