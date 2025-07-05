@@ -27,104 +27,25 @@ public class InfraExporterImpl implements InfraExporter {
         this.endpointPathResolver = new EndpointPathResolver(infraConfig.project());
     }
 
-    //todo привести в порядок этот бардак
-
-    public ServicesYaml.RequestResponse buildRequest(RestClassMethod method, String idName) {
-        if (method.getRequest() == null) return null;
-
-        var requestResponse = new ServicesYaml.RequestResponse();
-        requestResponse.setMethod(method.getHttpMethod().name().toLowerCase());
-        requestResponse.setSchema(
-                SCHEMA_PREFIX
-                        .concat(infraConfig.sowaProfileName())
-                        .concat("/request/")
-                        .concat(idName)
-                        .concat(REQUEST_SUFFIX)
-        );
-        requestResponse.setAllowEmptyBody(true);
-        return requestResponse;
-    }
-
-    private ServicesYaml.RequestResponse buildResponse(RestClassMethod method, String idName) {
-        if (method.getResponse() == null) return null;
-
-        var response = new ServicesYaml.RequestResponse();
-        response.setMethod(method.getHttpMethod().name().toLowerCase());
-        response.setSchema(
-                SCHEMA_PREFIX
-                        .concat(infraConfig.sowaProfileName())
-                        .concat("/response/")
-                        .concat(idName)
-                        .concat(RESPONSE_SUFFIX)
-        );
-        response.setAllowEmptyBody(true);
-        var responseCode = new ServicesYaml.ResponseCode();
-        responseCode.setOperator('~');
-        responseCode.setPattern("^2\\d{2}$");
-        response.setResponseCode(responseCode);
-        return response;
-    }
-
-    private ServicesYaml.RequestResponse buildError400Response(RestClassMethod restClassMethod) {
-        var response = new ServicesYaml.RequestResponse();
-        response.setMethod(restClassMethod.getHttpMethod().name().toLowerCase());
-        response.setSchema(
-                SCHEMA_PREFIX
-                        .concat(infraConfig.sowaProfileName())
-                        .concat("/response/")
-                        .concat("error_response_4XX.json")
-        );
-        response.setAllowEmptyBody(true);
-        var responseCode = new ServicesYaml.ResponseCode();
-        responseCode.setOperator('~');
-        responseCode.setPattern("^4\\d{2}$");
-        response.setResponseCode(responseCode);
-        return response;
-    }
-
     @Override
     public void export(List<RestClass> restClasses) {
         var servicesYaml = new ArrayList<ServicesYaml>();
         for (var restClass : restClasses) {
             for (var restMethod : restClass.getMethods()) {
                 var serviceYaml = new ServicesYaml();
+
                 var endpointToSchema = endpointPathResolver.endpointToSchema(restClass, restMethod);
                 serviceYaml.setId(endpointToSchema);
                 serviceYaml.setName(endpointToSchema);
+
                 var fullPathWithRegex = endpointPathResolver.resolvePathWithVariables(restClass, restMethod);
                 serviceYaml.setUrl(fullPathWithRegex);
 
-                var allowedQuery = new ServicesYaml.AllowedQuery();
-                if (restMethod.getHttpMethod() != null) {
-                    allowedQuery.setMethod(restMethod.getHttpMethod().name().toLowerCase());
-                }
-                serviceYaml.setAllowedQueries(List.of(allowedQuery));
+                serviceYaml.setAllowedQueries(getAllowedQueries(restMethod));
 
-                var responses = new ArrayList<ServicesYaml.RequestResponse>();
-                var requests = new ArrayList<ServicesYaml.RequestResponse>();
-
-                var response = buildResponse(restMethod, endpointToSchema);
-                if (response != null) {
-                    responses.add(response);
-                }
-                var error4XXResponse = buildError400Response(restMethod);
-                if (error4XXResponse != null) {
-                    responses.add(error4XXResponse);
-                }
-
-                var request = buildRequest(restMethod, endpointToSchema);
-                if (request != null) {
-                    requests.add(request);
-                }
-
-                var jsonValidator = new ServicesYaml.ValidatorJson();
-                if (!responses.isEmpty()) {
-                    jsonValidator.setResponse(responses);
-                }
-                if (!requests.isEmpty()) {
-                    jsonValidator.setRequest(requests);
-                }
-
+                var requests = getRequest(restMethod, endpointToSchema);
+                var responses = getResponse(restMethod, endpointToSchema);
+                var jsonValidator = getValidatorJson(requests, responses);
                 var validator = new ServicesYaml.Validator();
                 validator.setValidatorJson(jsonValidator);
                 serviceYaml.setValidators(validator);
@@ -143,5 +64,88 @@ public class InfraExporterImpl implements InfraExporter {
                 throw new RuntimeException("Ошибка во время экспорта services.yml", e);
             }
         }
+    }
+
+    private List<ServicesYaml.AllowedQuery> getAllowedQueries(RestClassMethod method) {
+        var allowedQuery = new ServicesYaml.AllowedQuery();
+        allowedQuery.setMethod(method.getHttpMethod().name().toLowerCase());
+        return List.of(allowedQuery);
+    }
+
+    private List<ServicesYaml.RequestResponse> getResponse(RestClassMethod restMethod, String endpointToSchema) {
+        var responses = new ArrayList<ServicesYaml.RequestResponse>();
+        var response = buildResponse(restMethod, endpointToSchema);
+        if (response != null) {
+            responses.add(response);
+        }
+        responses.add(buildError400Response(restMethod));
+        return responses;
+    }
+
+    private List<ServicesYaml.RequestResponse> getRequest(RestClassMethod restMethod, String endpointToSchema) {
+        var requests = new ArrayList<ServicesYaml.RequestResponse>();
+        var request = buildRequest(restMethod, endpointToSchema);
+        if (request != null) {
+            requests.add(request);
+        }
+        return requests;
+    }
+
+    public ServicesYaml.RequestResponse buildRequest(RestClassMethod method, String endpointToSchema) {
+        if (method.getRequest() == null) return null;
+
+        var requestResponse = new ServicesYaml.RequestResponse();
+        requestResponse.setMethod(method.getHttpMethod().name().toLowerCase());
+        requestResponse.setSchema(getSchemaName("/request/", endpointToSchema.concat(REQUEST_SUFFIX)));
+        requestResponse.setAllowEmptyBody(true);
+        return requestResponse;
+    }
+
+    private ServicesYaml.RequestResponse buildResponse(RestClassMethod method, String endpointToSchema) {
+        if (method.getResponse() == null) return null;
+
+        var response = new ServicesYaml.RequestResponse();
+        response.setMethod(method.getHttpMethod().name().toLowerCase());
+        response.setSchema(getSchemaName("/response/", endpointToSchema.concat(RESPONSE_SUFFIX)));
+        response.setAllowEmptyBody(true);
+        response.setResponseCode(buildCode('~', "^2\\d{2}$"));
+        return response;
+    }
+
+    private ServicesYaml.RequestResponse buildError400Response(RestClassMethod restClassMethod) {
+        var response = new ServicesYaml.RequestResponse();
+        response.setMethod(restClassMethod.getHttpMethod().name().toLowerCase());
+        response.setSchema(getSchemaName("/response/", "error_response_4XX.json"));
+        response.setAllowEmptyBody(true);
+        response.setResponseCode(buildCode('~', "^4\\d{2}$"));
+        return response;
+    }
+
+    private ServicesYaml.ResponseCode buildCode(char operator, String pattern) {
+        var responseCode = new ServicesYaml.ResponseCode();
+        responseCode.setOperator(operator);
+        responseCode.setPattern(pattern);
+        return responseCode;
+    }
+
+    private ServicesYaml.ValidatorJson getValidatorJson(
+            List<ServicesYaml.RequestResponse> requests,
+            List<ServicesYaml.RequestResponse> responses
+    ) {
+        var jsonValidator = new ServicesYaml.ValidatorJson();
+        if (!responses.isEmpty()) {
+            jsonValidator.setResponse(responses);
+        }
+        if (!requests.isEmpty()) {
+            jsonValidator.setRequest(requests);
+        }
+        return jsonValidator;
+    }
+
+    private String getSchemaName(String destination, String fileName) {
+        return SCHEMA_PREFIX
+                .concat(infraConfig.sowaProfileName())
+                .concat(destination)
+                .concat(fileName);
     }
 }

@@ -3,7 +3,7 @@ package dev.parfenov.sowa.schema.plugin;
 import dev.parfenov.sowa.schema.plugin.exporter.infra.InfraConfig;
 import dev.parfenov.sowa.schema.plugin.exporter.infra.InfraExporterImpl;
 import dev.parfenov.sowa.schema.plugin.exporter.schemas.ExportConfig;
-import dev.parfenov.sowa.schema.plugin.exporter.schemas.ExportStrategy;
+import dev.parfenov.sowa.schema.plugin.exporter.schemas.ExportToTarget;
 import dev.parfenov.sowa.schema.plugin.generator.Generator;
 import dev.parfenov.sowa.schema.plugin.generator.GeneratorConfig;
 import dev.parfenov.sowa.schema.plugin.parsers.classes.ClassParserConfig;
@@ -53,9 +53,10 @@ public class SowaGeneratorMojo extends AbstractMojo {
         var sowaSchemas = sowaSchemaGenerator.generateSchema(restControllers);
 
         // Экспорт
-        var exportConfig = ExportConfig.toTarget(project, getLog());
-        var exporter = ExportStrategy.getExporter(exportConfig);
-        exporter.ifPresent(e -> e.export(sowaSchemas));
+        // Схем
+        var exportConfig = new ExportConfig(project, getLog());
+        new ExportToTarget(exportConfig).export(sowaSchemas);
+        // Инфры
         var infraExporter = new InfraExporterImpl(new InfraConfig(project, sowaProfileName));
         infraExporter.export(restControllers);
     }
