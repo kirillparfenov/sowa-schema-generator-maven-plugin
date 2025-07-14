@@ -1,4 +1,4 @@
-package dev.parfenov.sowa.schema.plugin.exporter.infra;
+package dev.parfenov.sowa.schema.plugin.exporter.infra.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -74,16 +74,15 @@ public class RestClassMethod {
         this.pathVariables = pathVariables;
     }
 
-
     @Override
     public String toString() {
-        return "\nRestMethod{" +
-                "\nmethodName='" + name + '\'' +
-                ",\nendpointName='" + endpointPath + '\'' +
+        return "RestClassMethod{" +
+                "\nname='" + name + '\'' +
+                ",\nendpointPath='" + endpointPath + '\'' +
                 ",\nrequest=" + request +
                 ",\nresponse=" + response +
                 ",\nhttpMethod=" + httpMethod +
-                ",\npathVariableParams=" + pathVariables +
+                ",\npathVariables=" + pathVariables +
                 "\n}";
     }
 }
