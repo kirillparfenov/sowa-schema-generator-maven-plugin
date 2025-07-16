@@ -9,8 +9,6 @@ import org.apache.maven.project.MavenProject;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.UUID;
 
 
 public class EndpointPathResolver {
@@ -22,7 +20,7 @@ public class EndpointPathResolver {
     }
 
     public String resolvePathWithVariables(RestClass restClass, RestClassMethod restMethod) {
-        var fullPath = "^" + contextPath() + restClass.getEndpointPath() + restMethod.getEndpointPath() + "$";
+        var fullPath = "^/proxy" + contextPath() + restClass.getEndpointPath() + restMethod.getEndpointPath() + "$";
         var pathVariables = restMethod.getPathVariables();
         if (pathVariables == null || pathVariables.isEmpty()) {
             return fullPath;

@@ -8,9 +8,8 @@ public class GeneratorUtils {
     private GeneratorUtils() {}
 
     public static String changeRefPath(String refValue) {
-        var lastSlash = refValue.lastIndexOf("/");
         return PREFIX
-                .concat(refValue.substring(lastSlash + 1))
+                .concat(refValue.substring(refValue.lastIndexOf("/") + 1))
                 .concat(SUFFIX);
     }
 }

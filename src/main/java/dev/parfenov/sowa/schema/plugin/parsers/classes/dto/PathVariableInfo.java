@@ -31,7 +31,7 @@ public class PathVariableInfo {
 
     @Override
     public String toString() {
-        return "\nPathVariableParam{" +
+        return "PathVariableInfo{" +
                 "\nparamName='" + paramName + '\'' +
                 ",\nparamType=" + paramType +
                 "\n}";

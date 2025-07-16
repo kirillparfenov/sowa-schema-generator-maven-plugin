@@ -36,20 +36,6 @@ public class ClassLoader {
         return this.classLoader;
     }
 
-    /**
-     * Загружает erased класс
-     *
-     * @param name имя класса
-     * @return erased класс
-     */
-    public Class<?> loadErasedClass(String name) {
-        try {
-            return getClassLoader().loadClass(name);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Ошибка во время загрузки класса", e);
-        }
-    }
-
     public String baseProjectPackage() {
         return config.projectBasePackage();
     }

@@ -36,8 +36,9 @@ public class RestClass {
     @Override
     public String toString() {
         return "RestClass{" +
-                "\nendpointPath='" + endpointPath + '\'' +
+                "\nname='" + name + '\'' +
+                ",\nendpointPath='" + endpointPath + '\'' +
                 ",\nmethods=" + methods +
-                '}';
+                "\n}";
     }
 }
