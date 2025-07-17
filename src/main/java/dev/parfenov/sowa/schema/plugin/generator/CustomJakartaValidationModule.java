@@ -103,8 +103,9 @@ public class CustomJakartaValidationModule extends JakartaValidationModule {
 
     private Integer increaseLength(Integer stringLength) {
         if (stringLengthIncreasePercent > 0) {
-            var result = stringLength * (1 + stringLengthIncreasePercent / 100.0);
-            return (int) (Math.round(result / 100.0) * 100.0);
+            var value = stringLength * (1 + stringLengthIncreasePercent / 100.0);
+            var step = value < 100 ? 10 : 100;
+            return (int) (Math.round(value / step) * step);
         }
         return stringLength;
     }

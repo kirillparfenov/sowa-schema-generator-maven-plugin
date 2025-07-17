@@ -9,7 +9,6 @@ import org.springframework.util.CollectionUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
 import static dev.parfenov.sowa.schema.plugin.exporter.ExportDirectories.*;
 
@@ -17,12 +16,10 @@ public class SchemaExporter {
 
     private final ExportConfig config;
     private final ObjectMapper mapper;
-    private final Set<String> gitDiff;
 
     public SchemaExporter(ExportConfig config) {
         this.config = config;
         this.mapper = new ObjectMapper();
-        this.gitDiff = config.gitDiff();
     }
 
     /**
@@ -85,9 +82,4 @@ public class SchemaExporter {
             config.log().info("Сгенерирована схема: %s".formatted(file.getPath()));
         }
     }
-
-    //todo finish
-//    private boolean hasGitDiff(ObjectNode node, ) {
-//
-//    }
 }

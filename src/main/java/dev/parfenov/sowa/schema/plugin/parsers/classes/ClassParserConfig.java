@@ -4,5 +4,7 @@ import org.apache.maven.project.MavenProject;
 
 public record ClassParserConfig(
         MavenProject project,
-        String projectBasePackage
+        String projectBasePackage,
+        boolean onlyGitDiff,
+        String branchDiffWith
 ) {}

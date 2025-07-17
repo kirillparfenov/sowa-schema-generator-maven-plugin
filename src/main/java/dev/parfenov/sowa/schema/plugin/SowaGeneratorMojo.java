@@ -6,7 +6,6 @@ import dev.parfenov.sowa.schema.plugin.exporter.schemas.ExportConfig;
 import dev.parfenov.sowa.schema.plugin.exporter.schemas.SchemaExporter;
 import dev.parfenov.sowa.schema.plugin.generator.GeneratorConfig;
 import dev.parfenov.sowa.schema.plugin.generator.GeneratorStrategy;
-import dev.parfenov.sowa.schema.plugin.git.Git;
 import dev.parfenov.sowa.schema.plugin.parsers.classes.ClassParser;
 import dev.parfenov.sowa.schema.plugin.parsers.classes.ClassParserConfig;
 import dev.parfenov.sowa.schema.plugin.sowa.SowaSchemaGenerator;
@@ -16,8 +15,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
-
-import java.util.Optional;
 
 @Mojo(name = "generateSchema",
         defaultPhase = LifecyclePhase.COMPILE,
@@ -51,21 +48,17 @@ public class SowaGeneratorMojo extends AbstractMojo {
     @Override
     public synchronized void execute() {
         // Парсинг классов и методов
-        var parserConfig = new ClassParserConfig(project, projectPackage);
+        var parserConfig = new ClassParserConfig(project, projectPackage, onlyGitDiff, branchDiffWith);
         var restControllers = new ClassParser(parserConfig).parseAllRestClasses();
 
         // Генерация схем
         var generator = GeneratorStrategy.getGenerator(new GeneratorConfig(extractDefinitions, stringLengthIncreasePercent));
         var sowaSchemas = new SowaSchemaGenerator(generator, project).generateSchema(restControllers);
 
-        // Git diff
-        Optional<Git> git = onlyGitDiff ? Optional.of(new Git(branchDiffWith, project)) : Optional.empty();
-        var gitDiff = git.map(Git::getDiff).orElse(null);
-
         // Экспорт
         // Схем
-        new SchemaExporter(new ExportConfig(project, getLog(), gitDiff)).export(sowaSchemas);
+        new SchemaExporter(new ExportConfig(project, getLog())).export(sowaSchemas);
         // Инфры
-        new InfraExporter(new InfraConfig(project, sowaProfileName, gitDiff)).export(restControllers);
+        new InfraExporter(new InfraConfig(project, sowaProfileName)).export(restControllers);
     }
 }

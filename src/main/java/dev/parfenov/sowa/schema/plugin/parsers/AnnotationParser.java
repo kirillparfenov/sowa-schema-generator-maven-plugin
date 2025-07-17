@@ -1,15 +1,14 @@
-package dev.parfenov.sowa.schema.plugin.parsers.classes;
+package dev.parfenov.sowa.schema.plugin.parsers;
 
 import io.github.classgraph.ClassInfo;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.Optional;
 
-public class AnnotationResolver {
+public class AnnotationParser {
 
-    private AnnotationResolver() {
+    private AnnotationParser() {
     }
 
     public static <T extends Annotation> T findDirectOnClass(Class<T> lookingAnnotation, ClassInfo classInfo) {
@@ -32,15 +31,6 @@ public class AnnotationResolver {
         return Optional
                 .ofNullable(findDirectOnMethod(lookingAnnotation, realMethod))
                 .orElseGet(() -> findInsideAnyAnnotationOnMethod(lookingAnnotation, realMethod));
-    }
-
-    public static <T extends Annotation> T findDirectOnParameter(Class<T> lookingAnnotation, Parameter parameter) {
-        for (var annotation : parameter.getAnnotations()) {
-            if (lookingAnnotation.isAssignableFrom(annotation.annotationType())) {
-                return lookingAnnotation.cast(annotation);
-            }
-        }
-        return null;
     }
 
     public static <T extends Annotation> T findInsideAnyAnnotationOnMethod(Class<T> lookingAnnotation, Method method) {

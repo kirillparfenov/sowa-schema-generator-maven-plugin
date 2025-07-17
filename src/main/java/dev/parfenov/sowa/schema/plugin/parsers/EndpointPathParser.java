@@ -1,4 +1,4 @@
-package dev.parfenov.sowa.schema.plugin.parsers.classes;
+package dev.parfenov.sowa.schema.plugin.parsers;
 
 import dev.parfenov.sowa.schema.plugin.generator.Regex;
 import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.RestClass;
@@ -11,11 +11,11 @@ import org.springframework.web.bind.annotation.*;
 import java.lang.reflect.Method;
 
 
-public class EndpointPathResolver {
+public class EndpointPathParser {
 
     private final MavenProject mavenProject;
 
-    public EndpointPathResolver(final MavenProject mavenProject) {
+    public EndpointPathParser(final MavenProject mavenProject) {
         this.mavenProject = mavenProject;
     }
 
@@ -44,7 +44,7 @@ public class EndpointPathResolver {
     }
 
     public String pathOnClass(ClassInfo controllerClass) {
-        var requestMapping = AnnotationResolver.findDirectOnClass(RequestMapping.class, controllerClass);
+        var requestMapping = AnnotationParser.findDirectOnClass(RequestMapping.class, controllerClass);
         if (requestMapping != null) {
             if (requestMapping.value().length > 0) {
                 return cleanSlashes(requestMapping.value()[0]);
@@ -54,42 +54,42 @@ public class EndpointPathResolver {
     }
 
     public String pathOnMethod(Method method) {
-        var requestMapping = AnnotationResolver.findDirectOnMethod(RequestMapping.class, method);
+        var requestMapping = AnnotationParser.findDirectOnMethod(RequestMapping.class, method);
         if (requestMapping != null) {
             if (requestMapping.value().length > 0) {
                 return cleanSlashes(requestMapping.value()[0]);
             }
         }
 
-        var getMapping = AnnotationResolver.findDirectOnMethod(GetMapping.class, method);
+        var getMapping = AnnotationParser.findDirectOnMethod(GetMapping.class, method);
         if (getMapping != null) {
             if (getMapping.value().length > 0) {
                 return cleanSlashes(getMapping.value()[0]);
             }
         }
 
-        var postMapping = AnnotationResolver.findDirectOnMethod(PostMapping.class, method);
+        var postMapping = AnnotationParser.findDirectOnMethod(PostMapping.class, method);
         if (postMapping != null) {
             if (postMapping.value().length > 0) {
                 return cleanSlashes(postMapping.value()[0]);
             }
         }
 
-        var putMapping = AnnotationResolver.findDirectOnMethod(PutMapping.class, method);
+        var putMapping = AnnotationParser.findDirectOnMethod(PutMapping.class, method);
         if (putMapping != null) {
             if (putMapping.value().length > 0) {
                 return cleanSlashes(putMapping.value()[0]);
             }
         }
 
-        var deleteMapping = AnnotationResolver.findDirectOnMethod(DeleteMapping.class, method);
+        var deleteMapping = AnnotationParser.findDirectOnMethod(DeleteMapping.class, method);
         if (deleteMapping != null) {
             if (deleteMapping.value().length > 0) {
                 return cleanSlashes(deleteMapping.value()[0]);
             }
         }
 
-        var patchMapping = AnnotationResolver.findDirectOnMethod(PatchMapping.class, method);
+        var patchMapping = AnnotationParser.findDirectOnMethod(PatchMapping.class, method);
         if (patchMapping != null) {
             if (patchMapping.value().length > 0) {
                 return cleanSlashes(patchMapping.value()[0]);

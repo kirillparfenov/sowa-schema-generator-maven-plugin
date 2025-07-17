@@ -2,7 +2,7 @@ package dev.parfenov.sowa.schema.plugin.sowa;
 
 import dev.parfenov.sowa.schema.plugin.generator.GeneratedResult;
 import dev.parfenov.sowa.schema.plugin.generator.Generator;
-import dev.parfenov.sowa.schema.plugin.parsers.classes.EndpointPathResolver;
+import dev.parfenov.sowa.schema.plugin.parsers.EndpointPathParser;
 import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.RestClass;
 import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.RestClassMethod;
 import org.apache.maven.project.MavenProject;
@@ -18,12 +18,12 @@ public class SowaSchemaGenerator {
     private static final String RESPONSE_SUFFIX = "_response";
 
     private final Generator generator;
-    private final EndpointPathResolver pathResolver;
+    private final EndpointPathParser pathResolver;
 
     public SowaSchemaGenerator(final Generator generator,
                                final MavenProject mavenProject) {
         this.generator = generator;
-        this.pathResolver = new EndpointPathResolver(mavenProject);
+        this.pathResolver = new EndpointPathParser(mavenProject);
     }
 
     public List<SowaSchema> generateSchema(List<RestClass> restClasses) {

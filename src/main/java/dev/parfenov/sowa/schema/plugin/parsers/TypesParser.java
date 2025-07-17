@@ -1,21 +1,18 @@
-package dev.parfenov.sowa.schema.plugin.classloader;
+package dev.parfenov.sowa.schema.plugin.parsers;
 
 import com.fasterxml.classmate.*;
 
 import java.lang.reflect.Type;
 
-/**
- * Получение подробной информации о erased-классах
- */
-public class ResolvedClassLoader {
+public class TypesParser {
 
     private final TypeResolver typeResolver = new TypeResolver();
 
     /**
-     * Парсинг Class<?>
+     * Парсинг Type
      *
-     * @param type erased тип
-     * @return расширенная информация erased-класса
+     * @param type тип
+     * @return информация о типе
      */
     public ResolvedType resolveErasedType(Type type) {
         return typeResolver.resolve(type);
@@ -24,7 +21,7 @@ public class ResolvedClassLoader {
     /**
      * Парсит подробную информацию из ResolvedType
      *
-     * @param type расширенная информация о erased-классе
+     * @param type информация о типе
      * @return подробную информацию о классе
      */
     public ResolvedTypeWithMembers resolveTypeMembers(ResolvedType type) {

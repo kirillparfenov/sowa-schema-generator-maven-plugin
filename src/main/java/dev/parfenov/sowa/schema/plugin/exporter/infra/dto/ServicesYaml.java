@@ -105,6 +105,7 @@ public class ServicesYaml {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonPropertyOrder({"request", "response"})
     public static class ValidatorJson {
         private List<RequestResponse> response;
         private List<RequestResponse> request;
@@ -127,6 +128,7 @@ public class ServicesYaml {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonPropertyOrder({"method", "schema", "allow_empty_body", "response_code"})
     public static class RequestResponse {
         private String method;
         private String schema;
@@ -169,6 +171,7 @@ public class ServicesYaml {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonPropertyOrder({"operator", "pattern"})
     public static class ResponseCode {
         private char operator;
         private String pattern;

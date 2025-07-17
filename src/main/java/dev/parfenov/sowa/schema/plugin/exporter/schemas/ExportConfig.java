@@ -8,7 +8,5 @@ import java.util.Set;
 
 public record ExportConfig(
         MavenProject project,
-        Log log,
-        @Nullable
-        Set<String> gitDiff
+        Log log
 ) {}

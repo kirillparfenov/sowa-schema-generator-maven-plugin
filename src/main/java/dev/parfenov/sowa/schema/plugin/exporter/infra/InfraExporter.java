@@ -3,7 +3,7 @@ package dev.parfenov.sowa.schema.plugin.exporter.infra;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import dev.parfenov.sowa.schema.plugin.exporter.infra.dto.ServicesYaml;
-import dev.parfenov.sowa.schema.plugin.parsers.classes.EndpointPathResolver;
+import dev.parfenov.sowa.schema.plugin.parsers.EndpointPathParser;
 import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.RestClass;
 import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.RestClassMethod;
 
@@ -22,11 +22,11 @@ public class InfraExporter {
     private static final String REQUEST_SUFFIX = "_request.json";
 
     private final InfraConfig infraConfig;
-    private final EndpointPathResolver endpointPathResolver;
+    private final EndpointPathParser endpointPathParser;
 
     public InfraExporter(final InfraConfig infraConfig) {
         this.infraConfig = infraConfig;
-        this.endpointPathResolver = new EndpointPathResolver(infraConfig.project());
+        this.endpointPathParser = new EndpointPathParser(infraConfig.project());
     }
 
     /**
@@ -40,11 +40,11 @@ public class InfraExporter {
             for (var restMethod : restClass.getMethods()) {
                 var serviceYaml = new ServicesYaml();
 
-                var endpointToSchema = endpointPathResolver.endpointToSchema(restClass, restMethod);
+                var endpointToSchema = endpointPathParser.endpointToSchema(restClass, restMethod);
                 serviceYaml.setId(endpointToSchema);
                 serviceYaml.setName(endpointToSchema);
 
-                var fullPathWithRegex = endpointPathResolver.resolvePathWithVariables(restClass, restMethod);
+                var fullPathWithRegex = endpointPathParser.resolvePathWithVariables(restClass, restMethod);
                 serviceYaml.setUrl(fullPathWithRegex);
 
                 serviceYaml.setAllowedQueries(getAllowedQueries(restMethod));

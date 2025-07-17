@@ -45,6 +45,7 @@ public class ClassLoader {
                 .overrideClasspath(getClasspathElements())
                 .overrideClassLoaders(getClassLoader())
                 .acceptPackages(baseProjectPackage())
+                .enableInterClassDependencies()
                 .enableAllInfo();
     }
 

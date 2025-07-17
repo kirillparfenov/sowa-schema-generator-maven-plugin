@@ -1,14 +1,19 @@
 package dev.parfenov.sowa.schema.plugin.parsers.classes;
 
 import dev.parfenov.sowa.schema.plugin.classloader.ClassLoader;
-import dev.parfenov.sowa.schema.plugin.classloader.ResolvedClassLoader;
+import dev.parfenov.sowa.schema.plugin.git.GitDiffParser;
+import dev.parfenov.sowa.schema.plugin.parsers.AnnotationParser;
+import dev.parfenov.sowa.schema.plugin.parsers.EndpointPathParser;
+import dev.parfenov.sowa.schema.plugin.parsers.TypesParser;
 import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.PathVariableInfo;
 import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.RestClass;
 import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.RestClassMethod;
 import io.github.classgraph.ClassInfo;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.SerializationUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,22 +30,30 @@ import java.util.stream.Stream;
 public class ClassParser {
 
     private final ClassLoader classLoader;
-    private final EndpointPathResolver endpointPathResolver;
-    private final ResolvedClassLoader resolvedClassLoader = new ResolvedClassLoader();
+    private final EndpointPathParser endpointPathParser;
+    private final TypesParser typesParser = new TypesParser();
+    private final ClassParserConfig config;
 
     public ClassParser(final ClassParserConfig classParserConfig) {
         this.classLoader = new ClassLoader(classParserConfig);
-        this.endpointPathResolver = new EndpointPathResolver(classParserConfig.project());
+        this.endpointPathParser = new EndpointPathParser(classParserConfig.project());
+        this.config = classParserConfig;
     }
 
     public List<RestClass> parseAllRestClasses() {
         try (var scanResult = classLoader.getClassgraph().scan()) {
-            return scanResult
+            var result =  scanResult
                     .getClassesWithAnyAnnotation(RestController.class, Controller.class)
                     .filter(this::isProjectPackage)
                     .stream()
                     .map(this::parseRestController)
                     .toList();
+
+            if (config.onlyGitDiff()) {
+                new GitDiffParser(config.branchDiffWith(), classLoader).setNullForNoDiff(result);
+            }
+
+            return result;
         } catch (Exception e) {
             throw new RuntimeException("Ошибка во время сканирования графа классов", e);
         }
@@ -70,24 +83,24 @@ public class ClassParser {
     private void resolveRestClass(ClassInfo restController,
                                   RestClass currentClass,
                                   Map<String, RestClassMethod> currentClassMethods) {
-        var classEndpointPath = classEndpointPath(restController, currentClass.getEndpointPath());
-        if (currentClass.getEndpointPath() == null || currentClass.getEndpointPath().isBlank()) {
+        if (!StringUtils.hasText(currentClass.getEndpointPath())) {
+            var classEndpointPath = classEndpointPath(restController, currentClass.getEndpointPath());
             currentClass.setEndpointPath(classEndpointPath);
         }
         resolveClassMethods(restController, currentClassMethods);
     }
 
     private String classEndpointPath(ClassInfo classInfo, String currentPath) {
-        return currentPath == null || currentPath.isBlank()
-                ? endpointPathResolver.pathOnClass(classInfo)
-                : "";
+        return StringUtils.hasText(currentPath)
+                ? ""
+                : endpointPathParser.pathOnClass(classInfo);
     }
 
     private void resolveClassMethods(ClassInfo classInfo, Map<String, RestClassMethod> methodMap) {
-        var resolvedClass = resolvedClassLoader.resolveErasedType(classInfo.loadClass());
-        var classMembers = resolvedClassLoader.resolveTypeMembers(resolvedClass);
+        var resolvedClass = typesParser.resolveErasedType(classInfo.loadClass());
+        var classMembers = typesParser.resolveTypeMembers(resolvedClass);
         for (var method : classMembers.getMemberMethods()) {
-            var requestMapping = AnnotationResolver.directOnMethodOrAnnotations(RequestMapping.class, method.getRawMember());
+            var requestMapping = AnnotationParser.directOnMethodOrAnnotations(RequestMapping.class, method.getRawMember());
             if (requestMapping != null) {
                 var mapKey = resolveMethodName(method.getRawMember());
                 var mapValue = methodMap.getOrDefault(mapKey, new RestClassMethod());
@@ -108,7 +121,7 @@ public class ClassParser {
         var classMethod = Optional.ofNullable(fromMap).orElseGet(RestClassMethod::new);
         classMethod.setName(realMethod.getName());
 
-        if (classMethod.getPathVariables() == null || classMethod.getPathVariables().isEmpty()) {
+        if (CollectionUtils.isEmpty(classMethod.getPathVariables())) {
             var pathVariables = extractPathVariables(realMethod);
             classMethod.setPathVariables(pathVariables);
         }
@@ -121,13 +134,13 @@ public class ClassParser {
             classMethod.setResponse(extractResponse(realMethod));
         }
 
-        if (classMethod.getEndpointPath() == null || classMethod.getEndpointPath().isBlank()) {
-            var endpointPath = endpointPathResolver.pathOnMethod(realMethod);
+        if (!StringUtils.hasText(classMethod.getEndpointPath())) {
+            var endpointPath = endpointPathParser.pathOnMethod(realMethod);
             classMethod.setEndpointPath(endpointPath);
         }
 
         if (classMethod.getHttpMethod() == null) {
-            var requestMapping = AnnotationResolver.directOnMethodOrAnnotations(RequestMapping.class, realMethod);
+            var requestMapping = AnnotationParser.directOnMethodOrAnnotations(RequestMapping.class, realMethod);
             if (requestMapping != null && requestMapping.method().length > 0) {
                 classMethod.setHttpMethod(requestMapping.method()[0].asHttpMethod());
             }
