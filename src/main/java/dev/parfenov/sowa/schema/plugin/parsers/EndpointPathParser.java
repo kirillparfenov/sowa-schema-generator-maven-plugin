@@ -1,25 +1,41 @@
 package dev.parfenov.sowa.schema.plugin.parsers;
 
 import dev.parfenov.sowa.schema.plugin.generator.Regex;
-import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.RestClass;
-import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.RestClassMethod;
-import dev.parfenov.sowa.schema.plugin.parsers.properties.PropertiesParser;
+import dev.parfenov.sowa.schema.plugin.parsers.dto.RestClass;
+import dev.parfenov.sowa.schema.plugin.parsers.dto.RestMethod;
 import io.github.classgraph.ClassInfo;
 import org.apache.maven.project.MavenProject;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Method;
 
-
+/**
+ * Парсер путей эндпоинтов Spring MVC.
+ * <p>
+ * Извлекает и обрабатывает пути из аннотаций Spring MVC,
+ * разрешает переменные пути и формирует полные URL.
+ */
 public class EndpointPathParser {
 
     private final MavenProject mavenProject;
 
+    /**
+     * Создает парсер путей.
+     *
+     * @param mavenProject Maven проект для получения контекстного пути
+     */
     public EndpointPathParser(final MavenProject mavenProject) {
         this.mavenProject = mavenProject;
     }
 
-    public String resolvePathWithVariables(RestClass restClass, RestClassMethod restMethod) {
+    /**
+     * Разрешает полный путь с переменными в regex формат.
+     *
+     * @param restClass  REST контроллер
+     * @param restMethod метод контроллера
+     * @return полный путь с regex паттернами для переменных пути
+     */
+    public String resolvePathWithVariables(RestClass restClass, RestMethod restMethod) {
         var fullPath = "^/proxy" + contextPath() + restClass.getEndpointPath() + restMethod.getEndpointPath() + "$";
         var pathVariables = restMethod.getPathVariables();
         if (pathVariables == null || pathVariables.isEmpty()) {
@@ -35,14 +51,32 @@ public class EndpointPathParser {
         return fullPath;
     }
 
+    /**
+     * Получает контекстный путь приложения.
+     *
+     * @return контекстный путь из конфигурации проекта
+     */
     public String contextPath() {
         return PropertiesParser.contextPath(mavenProject);
     }
 
-    public String endpointToSchema(RestClass restClass, RestClassMethod restMethod) {
+    /**
+     * Генерирует имя схемы на основе класса и метода.
+     *
+     * @param restClass  REST контроллер
+     * @param restMethod метод контроллера
+     * @return имя схемы в формате "ClassName_methodName"
+     */
+    public String endpointToSchema(RestClass restClass, RestMethod restMethod) {
         return restClass.getName().concat("_").concat(restMethod.getName());
     }
 
+    /**
+     * Извлекает путь из аннотации @RequestMapping на классе.
+     *
+     * @param controllerClass информация о классе контроллера
+     * @return путь из аннотации или пустая строка
+     */
     public String pathOnClass(ClassInfo controllerClass) {
         var requestMapping = AnnotationParser.findDirectOnClass(RequestMapping.class, controllerClass);
         if (requestMapping != null) {
@@ -53,6 +87,15 @@ public class EndpointPathParser {
         return "";
     }
 
+    /**
+     * Извлекает путь из аннотаций маппинга на методе.
+     * <p>
+     * Поддерживает @RequestMapping, @GetMapping, @PostMapping,
+     *
+     * @param method метод для анализа
+     * @return путь из аннотации или пустая строка
+     * @PutMapping, @DeleteMapping, @PatchMapping.
+     */
     public String pathOnMethod(Method method) {
         var requestMapping = AnnotationParser.findDirectOnMethod(RequestMapping.class, method);
         if (requestMapping != null) {
@@ -99,6 +142,12 @@ public class EndpointPathParser {
         return "";
     }
 
+    /**
+     * Очищает слэши в пути, добавляя начальный слэш если необходимо.
+     *
+     * @param path путь для очистки
+     * @return нормализованный путь
+     */
     private String cleanSlashes(String path) {
         if (path.isBlank()) {
             return "";

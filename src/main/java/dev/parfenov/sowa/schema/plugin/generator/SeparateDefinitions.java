@@ -13,6 +13,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Генератор JSON Schema с раздельными определениями.
+ * <p>
+ * Создает схемы где определения извлекаются в отдельные объекты,
+ * а в основной схеме остаются только ссылки на них.
+ */
 public class SeparateDefinitions implements Generator {
 
     private static final String REF = "$ref";
@@ -20,11 +26,23 @@ public class SeparateDefinitions implements Generator {
     private final SchemaGenerator schemaGenerator;
     private final GeneratorConfig generatorConfig;
 
+    /**
+     * Создает генератор с конфигурацией.
+     *
+     * @param config конфигурация генератора
+     */
     public SeparateDefinitions(GeneratorConfig config) {
         this.schemaGenerator = new SchemaGenerator(config.getConfig());
         this.generatorConfig = config;
     }
 
+    /**
+     * Генерирует JSON Schema для указанного типа с извлечением определений.
+     *
+     * @param type       тип для генерации схемы
+     * @param schemaName имя схемы
+     * @return результат генерации с основной схемой и списком определений
+     */
     @Override
     public GeneratedResult generate(Type type, String schemaName) {
         var mainSchema = generateNode(type);
@@ -33,12 +51,23 @@ public class SeparateDefinitions implements Generator {
         return new GeneratedResult(schemaName, mainSchema, definitions);
     }
 
+    /**
+     * Генерирует узел схемы для типа и обновляет ссылки.
+     *
+     * @param type тип для генерации
+     * @return узел ObjectNode со схемой
+     */
     private ObjectNode generateNode(Type type) {
         var mainSchema = schemaGenerator.generateSchema(type);
         replaceRef(mainSchema);
         return mainSchema;
     }
 
+    /**
+     * Рекурсивно заменяет ссылки в схеме на новый формат.
+     *
+     * @param jsonNode узел для обработки
+     */
     private void replaceRef(JsonNode jsonNode) {
         if (jsonNode instanceof ObjectNode objectNode) {
             if (objectNode.has(REF)) {
@@ -60,6 +89,12 @@ public class SeparateDefinitions implements Generator {
         }
     }
 
+    /**
+     * Извлекает определения из основной схемы в отдельный список.
+     *
+     * @param mainSchema основная схема
+     * @return список извлеченных определений
+     */
     private List<GeneratedResult> extractDefinitions(ObjectNode mainSchema) {
         var definitions = mainSchema.get(DEFINITIONS);
         if (definitions == null) {
@@ -75,6 +110,11 @@ public class SeparateDefinitions implements Generator {
         return definitionList;
     }
 
+    /**
+     * Добавляет тег схемы к определению.
+     *
+     * @param node узел определения
+     */
     private void setSchemaToDefinition(JsonNode node) {
         if (node instanceof ObjectNode objectNode) {
             var schemaTag = generatorConfig.getConfig().getKeyword(SchemaKeyword.TAG_SCHEMA);
@@ -83,10 +123,18 @@ public class SeparateDefinitions implements Generator {
         }
     }
 
+    /**
+     * Удаляет секцию определений из основной схемы.
+     *
+     * @param mainSchema основная схема
+     */
     private void deleteDefinitions(ObjectNode mainSchema) {
         mainSchema.remove(DEFINITIONS);
     }
 
+    /**
+     * Итератор для обхода полей JSON узла.
+     */
     private record NodeIterable(Iterator<Map.Entry<String, JsonNode>> iterator)
             implements Iterable<Map.Entry<String, JsonNode>> {
     }

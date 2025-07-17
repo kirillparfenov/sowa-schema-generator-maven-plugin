@@ -4,25 +4,31 @@ import com.fasterxml.classmate.*;
 
 import java.lang.reflect.Type;
 
+/**
+ * Парсер для работы с Java типами и их метаданными.
+ * <p>
+ * Использует библиотеку ClassMate для анализа типов и извлечения
+ * информации о членах классов с учетом аннотаций.
+ */
 public class TypesParser {
 
     private final TypeResolver typeResolver = new TypeResolver();
 
     /**
-     * Парсинг Type
+     * Разрешает информацию о типе.
      *
-     * @param type тип
-     * @return информация о типе
+     * @param type Java тип для анализа
+     * @return информация о разрешенном типе
      */
     public ResolvedType resolveErasedType(Type type) {
         return typeResolver.resolve(type);
     }
 
     /**
-     * Парсит подробную информацию из ResolvedType
+     * Извлекает подробную информацию о членах типа.
      *
-     * @param type информация о типе
-     * @return подробную информацию о классе
+     * @param type разрешенный тип для анализа
+     * @return подробная информация о классе включая методы, поля и аннотации
      */
     public ResolvedTypeWithMembers resolveTypeMembers(ResolvedType type) {
         var memberResolver = new MemberResolver(typeResolver);

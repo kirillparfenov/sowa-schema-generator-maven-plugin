@@ -1,18 +1,51 @@
 package dev.parfenov.sowa.schema.plugin.sowa;
 
 import dev.parfenov.sowa.schema.plugin.generator.GeneratedResult;
-import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.PathVariableInfo;
+import dev.parfenov.sowa.schema.plugin.parsers.dto.PathVariableInfo;
 import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
+/**
+ * Модель данных для схемы Sowa.
+ * <p>
+ * Содержит всю информацию о REST эндпоинте включая схемы запроса/ответа,
+ * метаданные контроллера и метода, HTTP метод и путь.
+ */
 public class SowaSchema {
+    /**
+     * Схема запроса эндпоинта
+     */
     private GeneratedResult request;
+
+    /**
+     * Схема ответа эндпоинта
+     */
     private GeneratedResult response;
+
+    /**
+     * Имя REST контроллера
+     */
     private String restClassName;
+
+    /**
+     * Имя метода контроллера
+     */
     private String restMethodName;
+
+    /**
+     * HTTP метод эндпоинта
+     */
     private HttpMethod httpMethod;
+
+    /**
+     * Полный путь эндпоинта
+     */
     private String fullEndpointPath;
+
+    /**
+     * Список переменных пути
+     */
     private List<PathVariableInfo> pathVariables;
 
     /*-------------------------------------------------------*/

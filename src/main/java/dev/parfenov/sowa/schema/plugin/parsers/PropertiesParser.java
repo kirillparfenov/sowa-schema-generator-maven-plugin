@@ -1,4 +1,4 @@
-package dev.parfenov.sowa.schema.plugin.parsers.properties;
+package dev.parfenov.sowa.schema.plugin.parsers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;

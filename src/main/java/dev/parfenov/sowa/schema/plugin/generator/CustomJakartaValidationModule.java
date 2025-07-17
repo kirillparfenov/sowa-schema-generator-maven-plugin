@@ -1,199 +1,174 @@
 package dev.parfenov.sowa.schema.plugin.generator;
 
-import com.fasterxml.classmate.ResolvedType;
 import com.github.victools.jsonschema.generator.*;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationModule;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationOption;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import static dev.parfenov.sowa.schema.plugin.generator.SchemaAnnotationExtractor.getSchemaAnnotationValue;
+import static dev.parfenov.sowa.schema.plugin.generator.ConstraintResolver.resolveNumericMaximum;
+import static dev.parfenov.sowa.schema.plugin.generator.ValidationConstants.ARRAY_MAX_SIZE;
+
+/**
+ * Кастомный модуль валидации Jakarta для генерации JSON Schema.
+ * <p>
+ * Расширяет стандартный JakartaValidationModule дополнительной поддержкой
+ * аннотаций Swagger/OpenAPI и настраиваемыми ограничениями валидации.
+ * <p>
+ * Основные возможности:
+ * <ul>
+ *   <li>Поддержка аннотаций @Schema и @ArraySchema</li>
+ *   <li>Настраиваемое увеличение длины строк</li>
+ *   <li>Автоматические ограничения для типов (UUID, числа)</li>
+ *   <li>Определение максимальных размеров массивов</li>
+ * </ul>
+ */
 public class CustomJakartaValidationModule extends JakartaValidationModule {
 
-    private static final Integer ARRAY_MAX_SIZE = 1000;
-    private final int stringLengthIncreasePercent;
+    private final StringLengthCalculator lengthCalculator;
 
+    /**
+     * Создает модуль с настраиваемым процентом увеличения длины строк.
+     *
+     * @param stringLengthIncreasePercent процент увеличения длины строк (0-100)
+     * @param options                     дополнительные опции Jakarta валидации
+     */
     public CustomJakartaValidationModule(int stringLengthIncreasePercent, JakartaValidationOption... options) {
         super(options);
-        this.stringLengthIncreasePercent = stringLengthIncreasePercent;
+        this.lengthCalculator = new StringLengthCalculator(stringLengthIncreasePercent);
     }
 
     @Override
     public void applyToConfigBuilder(SchemaGeneratorConfigBuilder builder) {
         super.applyToConfigBuilder(builder);
-        this.applyToConfigBuilder(builder.forTypesInGeneral());
-        this.applyToConfigBuilder(builder.forFields());
-        this.applyToConfigBuilder(builder.forMethods());
-
+        applyToConfigBuilder(builder.forTypesInGeneral());
+        applyToConfigBuilder(builder.forFields());
+        applyToConfigBuilder(builder.forMethods());
     }
 
+    /**
+     * Применяет настройки к общей части конфигурации.
+     */
     private void applyToConfigBuilder(SchemaGeneratorConfigPart<?> configPart) {
-        configPart.withTargetTypeOverridesResolver(this::resolveTargetTypeOverrides);
         configPart.withDescriptionResolver(this::resolveDescription);
     }
 
+    /**
+     * Применяет настройки к общей конфигурации типов.
+     */
+    private void applyToConfigBuilder(SchemaGeneratorGeneralConfigPart configPart) {
+        configPart.withArrayMaxItemsResolver(this::resolveArrayMaxItems);
+        configPart.withNumberInclusiveMaximumResolver(this::resolveTypeMaximum);
+        configPart.withDescriptionResolver(this.createTypePropertyResolver(Schema::description, description -> !description.isBlank()));
+    }
+
+    /**
+     * Разрешает описание из аннотации Schema.
+     */
     private String resolveDescription(MemberScope<?, ?> member) {
-        return this.getSchemaAnnotationValue(
+        return getSchemaAnnotationValue(
                 member,
                 Schema::description,
                 description -> !description.isEmpty()
         ).orElse(null);
     }
 
-    private List<ResolvedType> resolveTargetTypeOverrides(MemberScope<?, ?> member) {
-        return this.getSchemaAnnotationValue(
-                        member,
-                        Schema::implementation,
-                        annotatedImplementation -> annotatedImplementation != Void.class)
-                .map(annotatedType -> member.getContext().resolve(annotatedType))
-                .map(Collections::singletonList)
-                .orElse(null);
+    /**
+     * Разрешает максимальный размер массива для типа.
+     */
+    private Integer resolveArrayMaxItems(TypeScope typeScope) {
+        return typeScope.isContainerType() ? ARRAY_MAX_SIZE : null;
+    }
+
+    /**
+     * Разрешает максимальное числовое значение для типа.
+     */
+    private BigDecimal resolveTypeMaximum(TypeScope typeScope) {
+        return resolveNumericMaximum(typeScope.getType());
     }
 
     @Override
     protected Boolean isNullable(MemberScope<?, ?> member) {
-        return Optional
-                .ofNullable(super.isNullable(member))
-                .orElseGet(() -> this.checkNullable(member));
+        return super.isNullable(member);
+//        return Optional
+//                .ofNullable(super.isNullable(member))
+//                .orElseGet(() -> checkNullable(member)); //todo вернуть, если потребуется
     }
 
+    /**
+     * Проверяет nullable свойство из аннотации Schema.
+     */
     private Boolean checkNullable(MemberScope<?, ?> member) {
-        return this.getSchemaAnnotationValue(member, Function.identity(), x -> true)
+        return getSchemaAnnotationValue(member, Function.identity(), x -> true)
                 .map(Schema::nullable)
                 .orElse(null);
     }
 
-    private void applyToConfigBuilder(SchemaGeneratorGeneralConfigPart configPart) {
-        configPart.withArrayMaxItemsResolver(typeScope -> {
-            if (typeScope.isContainerType()) {
-                return ARRAY_MAX_SIZE;
-            }
-            return null;
-        });
-
-        configPart.withNumberInclusiveMaximumResolver(typeScope -> this.inclusiveMaximum(typeScope.getType()));
-        configPart.withDescriptionResolver(this.createTypePropertyResolver(Schema::description, description -> !description.isBlank()));
-    }
-
     @Override
     protected Integer resolveStringMaxLength(MemberScope<?, ?> member) {
-        var maxStringLength = super.resolveStringMaxLength(member);
-        if (maxStringLength != null) return increaseLength(maxStringLength);
-
-        maxStringLength = getSchemaAnnotationValue(
-                member,
-                Schema::maxLength,
-                maxLength -> maxLength < Integer.MAX_VALUE && maxLength > -1
-        ).orElse(null);
-        if (maxStringLength != null) return increaseLength(maxStringLength);
-
-        if (member.getType().isInstanceOf(CharSequence.class)) {
-            return 300;
-        }
-
-        if (member.getType().isInstanceOf(UUID.class)) {
-            return 36;
-        }
-        return null;
-    }
-
-    private Integer increaseLength(Integer stringLength) {
-        if (stringLengthIncreasePercent > 0) {
-            var value = stringLength * (1 + stringLengthIncreasePercent / 100.0);
-            var step = value < 100 ? 10 : 100;
-            return (int) (Math.round(value / step) * step);
-        }
-        return stringLength;
-    }
-
-    private <T> Optional<T> getSchemaAnnotationValue(MemberScope<?, ?> member,
-                                                     Function<Schema, T> valueExtractor,
-                                                     Predicate<T> valueFilter) {
-        if (member.isFakeContainerItemScope()) {
-            return this.getArraySchemaAnnotation(member)
-                    .map(ArraySchema::schema)
-                    .map(valueExtractor)
-                    .filter(valueFilter);
-        }
-        var annotation = member.getAnnotationConsideringFieldAndGetter(Schema.class);
-        if (annotation != null) {
-            return Optional.of(annotation)
-                    .map(valueExtractor)
-                    .filter(valueFilter);
-        }
-        return this.getArraySchemaAnnotation(member)
-                .map(ArraySchema::arraySchema)
-                .map(valueExtractor)
-                .filter(valueFilter);
-    }
-
-    private Optional<ArraySchema> getArraySchemaAnnotation(MemberScope<?, ?> member) {
-        return Optional.ofNullable(member.getAnnotationConsideringFieldAndGetter(ArraySchema.class));
+        return ConstraintResolver.resolveStringMaxLength(member, lengthCalculator, super::resolveStringMaxLength);
     }
 
     @Override
     protected String resolveStringPattern(MemberScope<?, ?> member) {
-        if (member.getType().isInstanceOf(UUID.class)) {
-            return "^%s$".formatted(Regex.getRegexOrDefault(UUID.class.getName()));
-        }
-        return Optional
-                .ofNullable(super.resolveStringPattern(member))
-                .or(() -> this.getSchemaAnnotationValue(member, Schema::pattern, pattern -> !pattern.isEmpty()))
-                .orElse(null);
+        return ConstraintResolver.resolveStringPattern(member, super::resolveStringPattern);
     }
 
     @Override
     protected BigDecimal resolveNumberInclusiveMaximum(MemberScope<?, ?> member) {
         return Optional
                 .ofNullable(super.resolveNumberInclusiveMaximum(member))
-                .orElseGet(() -> this.inclusiveMaximum(member));
+                .orElseGet(() -> resolveInclusiveMaximum(member));
     }
 
-    private BigDecimal inclusiveMaximum(MemberScope<?, ?> memberScope) {
-        return this.getSchemaAnnotationValue(memberScope, Schema::maximum, maximum -> !maximum.isEmpty())
-                .filter(maximum -> this.getSchemaAnnotationValue(memberScope, Schema::exclusiveMaximum, Boolean.FALSE::equals).isPresent())
+    /**
+     * Разрешает включающий максимум из аннотации Schema.
+     */
+    private BigDecimal resolveInclusiveMaximum(MemberScope<?, ?> memberScope) {
+        return getSchemaAnnotationValue(memberScope, Schema::maximum, maximum -> !maximum.isEmpty())
+                .filter(maximum -> getSchemaAnnotationValue(memberScope, Schema::exclusiveMaximum, Boolean.FALSE::equals).isPresent())
                 .map(BigDecimal::new)
-                .orElseGet(() -> inclusiveMaximum(memberScope.getType()));
-    }
-
-    private BigDecimal inclusiveMaximum(ResolvedType typeScope) {
-        if (typeScope.isInstanceOf(Integer.class) || typeScope.isInstanceOf(int.class)) {
-            return new BigDecimal(Integer.MAX_VALUE);
-        } else if (typeScope.isInstanceOf(Long.class) || typeScope.isInstanceOf(long.class)) {
-            return new BigDecimal(Long.MAX_VALUE);
-        } else if (typeScope.isInstanceOf(Byte.class) || typeScope.isInstanceOf(byte.class)) {
-            return new BigDecimal(Byte.MAX_VALUE);
-        }
-
-        return null;
+                .orElseGet(() -> resolveNumericMaximum(memberScope.getType()));
     }
 
     @Override
     protected Integer resolveArrayMaxItems(MemberScope<?, ?> member) {
-        if (member.isContainerType()) {
-            var maxItems = super.resolveArrayMaxItems(member);
-            return Objects.isNull(maxItems) ? ARRAY_MAX_SIZE : maxItems;
+        if (!member.isContainerType()) {
+            return null;
         }
-        return null;
+
+        Integer maxItems = super.resolveArrayMaxItems(member);
+        return Objects.isNull(maxItems) ? ARRAY_MAX_SIZE : maxItems;
     }
 
     @Override
     protected Integer resolveStringMinLength(MemberScope<?, ?> member) {
-        var stringMinLength = super.resolveStringMinLength(member);
-        if (stringMinLength != null) return stringMinLength;
+        Integer stringMinLength = super.resolveStringMinLength(member);
+        if (stringMinLength != null) {
+            return stringMinLength;
+        }
 
-        return this.getSchemaAnnotationValue(member, Schema::minLength, minLength -> minLength > 0)
+        return getSchemaAnnotationValue(member, Schema::minLength, minLength -> minLength > 0)
                 .orElse(null);
     }
 
+    /**
+     * Создает resolver для свойств типа из аннотации Schema.
+     *
+     * @param <T>            тип извлекаемого значения
+     * @param valueExtractor функция извлечения значения
+     * @param valueFilter    предикат фильтрации
+     * @return ConfigFunction для разрешения свойства
+     */
     private <T> ConfigFunction<TypeScope, T> createTypePropertyResolver(
             Function<Schema, T> valueExtractor,
-            Predicate<T> valueFilter
-    ) {
+            Predicate<T> valueFilter) {
         return typeScope -> Optional
                 .ofNullable(typeScope.getType().getErasedType().getAnnotation(Schema.class))
                 .map(valueExtractor)

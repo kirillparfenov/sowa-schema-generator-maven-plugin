@@ -1,4 +1,4 @@
-package dev.parfenov.sowa.schema.plugin.exporter.infra;
+package dev.parfenov.sowa.schema.plugin.exporter;
 
 import org.apache.maven.project.MavenProject;
 

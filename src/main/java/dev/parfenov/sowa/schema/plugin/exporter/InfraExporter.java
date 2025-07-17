@@ -1,11 +1,11 @@
-package dev.parfenov.sowa.schema.plugin.exporter.infra;
+package dev.parfenov.sowa.schema.plugin.exporter;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import dev.parfenov.sowa.schema.plugin.exporter.infra.dto.ServicesYaml;
+import dev.parfenov.sowa.schema.plugin.exporter.dto.ServicesYaml;
 import dev.parfenov.sowa.schema.plugin.parsers.EndpointPathParser;
-import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.RestClass;
-import dev.parfenov.sowa.schema.plugin.parsers.classes.dto.RestClassMethod;
+import dev.parfenov.sowa.schema.plugin.parsers.dto.RestClass;
+import dev.parfenov.sowa.schema.plugin.parsers.dto.RestMethod;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,13 +73,13 @@ public class InfraExporter {
         }
     }
 
-    private List<ServicesYaml.AllowedQuery> getAllowedQueries(RestClassMethod method) {
+    private List<ServicesYaml.AllowedQuery> getAllowedQueries(RestMethod method) {
         var allowedQuery = new ServicesYaml.AllowedQuery();
         allowedQuery.setMethod(method.getHttpMethod().name().toLowerCase());
         return List.of(allowedQuery);
     }
 
-    private List<ServicesYaml.RequestResponse> getResponse(RestClassMethod restMethod, String endpointToSchema) {
+    private List<ServicesYaml.RequestResponse> getResponse(RestMethod restMethod, String endpointToSchema) {
         var responses = new ArrayList<ServicesYaml.RequestResponse>();
         var response = buildResponse(restMethod, endpointToSchema);
         if (response != null) {
@@ -89,7 +89,7 @@ public class InfraExporter {
         return responses;
     }
 
-    private List<ServicesYaml.RequestResponse> getRequest(RestClassMethod restMethod, String endpointToSchema) {
+    private List<ServicesYaml.RequestResponse> getRequest(RestMethod restMethod, String endpointToSchema) {
         var requests = new ArrayList<ServicesYaml.RequestResponse>();
         var request = buildRequest(restMethod, endpointToSchema);
         if (request != null) {
@@ -98,7 +98,7 @@ public class InfraExporter {
         return requests;
     }
 
-    public ServicesYaml.RequestResponse buildRequest(RestClassMethod method, String endpointToSchema) {
+    public ServicesYaml.RequestResponse buildRequest(RestMethod method, String endpointToSchema) {
         if (method.getRequest() == null) return null;
 
         var requestResponse = new ServicesYaml.RequestResponse();
@@ -108,7 +108,7 @@ public class InfraExporter {
         return requestResponse;
     }
 
-    private ServicesYaml.RequestResponse buildResponse(RestClassMethod method, String endpointToSchema) {
+    private ServicesYaml.RequestResponse buildResponse(RestMethod method, String endpointToSchema) {
         if (method.getResponse() == null) return null;
 
         var response = new ServicesYaml.RequestResponse();
@@ -119,9 +119,9 @@ public class InfraExporter {
         return response;
     }
 
-    private ServicesYaml.RequestResponse buildError400Response(RestClassMethod restClassMethod) {
+    private ServicesYaml.RequestResponse buildError400Response(RestMethod restMethod) {
         var response = new ServicesYaml.RequestResponse();
-        response.setMethod(restClassMethod.getHttpMethod().name().toLowerCase());
+        response.setMethod(restMethod.getHttpMethod().name().toLowerCase());
         response.setSchema(getSchemaName("/response/", "error_response_4XX.json"));
         response.setAllowEmptyBody(true);
         response.setResponseCode(buildCode('~', "^4\\d{2}$"));
