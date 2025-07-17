@@ -5,14 +5,32 @@ import com.github.victools.jsonschema.generator.SchemaGenerator;
 import java.lang.reflect.Type;
 import java.util.List;
 
+/**
+ * Генератор JSON Schema со встроенными определениями.
+ * <p>
+ * Создает схемы где все определения включены непосредственно в основную схему,
+ * без выделения их в отдельные объекты.
+ */
 public class WithDefinitions implements Generator {
 
     private final SchemaGenerator schemaGenerator;
 
+    /**
+     * Создает генератор с конфигурацией.
+     *
+     * @param config конфигурация генератора
+     */
     public WithDefinitions(GeneratorConfig config) {
         this.schemaGenerator = new SchemaGenerator(config.getConfig());
     }
 
+    /**
+     * Генерирует JSON Schema для указанного типа.
+     *
+     * @param type       тип для генерации схемы
+     * @param schemaName имя схемы
+     * @return результат генерации с основной схемой и пустым списком определений
+     */
     @Override
     public GeneratedResult generate(Type type, String schemaName) {
         var mainSchema = schemaGenerator.generateSchema(type);

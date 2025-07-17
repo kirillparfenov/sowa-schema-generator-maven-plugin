@@ -4,11 +4,23 @@ import com.github.victools.jsonschema.generator.*;
 import com.github.victools.jsonschema.module.jackson.JacksonModule;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationOption;
 
+/**
+ * Конфигурация для генератора JSON Schema.
+ * <p>
+ * Настраивает параметры генерации схем включая опции валидации,
+ * обработку определений и интеграцию с Jakarta Validation.
+ */
 public class GeneratorConfig {
 
     private final SchemaGeneratorConfig config;
     private final boolean extractDefinitions;
 
+    /**
+     * Создает конфигурацию генератора.
+     *
+     * @param extractDefinitions          флаг для извлечения определений в отдельные объекты
+     * @param stringLengthIncreasePercent процент увеличения длины строк для валидации
+     */
     public GeneratorConfig(boolean extractDefinitions, int stringLengthIncreasePercent) {
         this.extractDefinitions = extractDefinitions;
 
@@ -32,10 +44,20 @@ public class GeneratorConfig {
         this.config = configBuilder.build();
     }
 
+    /**
+     * Возвращает конфигурацию генератора схем.
+     *
+     * @return настроенная конфигурация SchemaGeneratorConfig
+     */
     public SchemaGeneratorConfig getConfig() {
         return config;
     }
 
+    /**
+     * Проверяет, включено ли извлечение определений.
+     *
+     * @return true если определения должны извлекаться отдельно
+     */
     public boolean isExtractDefinitions() {
         return extractDefinitions;
     }

@@ -1,6 +1,6 @@
 package dev.parfenov.sowa.schema.plugin.classloader;
 
-import dev.parfenov.sowa.schema.plugin.parsers.classes.ClassParserConfig;
+import dev.parfenov.sowa.schema.plugin.parsers.ClassParserConfig;
 import io.github.classgraph.ClassGraph;
 
 import java.io.File;
@@ -10,20 +10,33 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+/**
+ * Загрузчик классов для Maven проекта.
+ * <p>
+ * Создает ClassLoader с classpath элементами проекта и настраивает
+ * ClassGraph для сканирования классов в указанном пакете.
+ */
 public class ClassLoader {
 
     private final List<URL> classpathElements = new ArrayList<>();
     private final ClassParserConfig config;
     private URLClassLoader classLoader;
 
+    /**
+     * Создает загрузчик классов с конфигурацией.
+     *
+     * @param config конфигурация парсера классов
+     */
     public ClassLoader(final ClassParserConfig config) {
         this.config = config;
     }
 
     /**
-     * Получить ClassLoader
+     * Возвращает настроенный URLClassLoader.
+     * <p>
+     * Создает ClassLoader с classpath элементами проекта если он еще не создан.
      *
-     * @return ClassLoader
+     * @return настроенный URLClassLoader
      */
     public URLClassLoader getClassLoader() {
         if (this.classLoader == null) {
@@ -36,18 +49,34 @@ public class ClassLoader {
         return this.classLoader;
     }
 
+    /**
+     * Возвращает базовый пакет проекта.
+     *
+     * @return базовый пакет проекта для сканирования
+     */
     public String baseProjectPackage() {
         return config.projectBasePackage();
     }
 
+    /**
+     * Создает настроенный ClassGraph для сканирования классов.
+     *
+     * @return ClassGraph настроенный для сканирования пакета проекта
+     */
     public ClassGraph getClassgraph() {
         return new ClassGraph()
                 .overrideClasspath(getClasspathElements())
                 .overrideClassLoaders(getClassLoader())
                 .acceptPackages(baseProjectPackage())
+                .enableInterClassDependencies()
                 .enableAllInfo();
     }
 
+    /**
+     * Получает список URL classpath элементов проекта.
+     *
+     * @return список URL для runtime и compile classpath
+     */
     private List<URL> getClasspathElements() {
         if (!this.classpathElements.isEmpty()) {
             return this.classpathElements;

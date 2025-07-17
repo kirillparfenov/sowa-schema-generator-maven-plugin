@@ -1,11 +1,28 @@
-package dev.parfenov.sowa.schema.plugin.parsers.classes.dto;
+package dev.parfenov.sowa.schema.plugin.parsers.dto;
 
 import java.util.List;
 
+/**
+ * DTO для представления REST контроллера.
+ * <p>
+ * Содержит информацию о классе контроллера включая его имя,
+ * базовый путь эндпоинта и список методов.
+ */
 public class RestClass {
+    /**
+     * Имя класса контроллера
+     */
     private String name;
+
+    /**
+     * Базовый путь эндпоинта из аннотации @RequestMapping на классе
+     */
     private String endpointPath;
-    private List<RestClassMethod> methods;
+
+    /**
+     * Список методов контроллера
+     */
+    private List<RestMethod> methods;
 
     /*-------------------------------------------------------*/
 
@@ -25,11 +42,11 @@ public class RestClass {
         this.endpointPath = endpointPath;
     }
 
-    public List<RestClassMethod> getMethods() {
+    public List<RestMethod> getMethods() {
         return methods;
     }
 
-    public void setMethods(List<RestClassMethod> methods) {
+    public void setMethods(List<RestMethod> methods) {
         this.methods = methods;
     }
 

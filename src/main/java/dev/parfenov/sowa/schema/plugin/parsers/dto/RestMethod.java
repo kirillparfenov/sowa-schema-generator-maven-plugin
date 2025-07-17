@@ -1,27 +1,45 @@
-package dev.parfenov.sowa.schema.plugin.parsers.classes.dto;
+package dev.parfenov.sowa.schema.plugin.parsers.dto;
 
 import org.springframework.http.HttpMethod;
 
 import java.lang.reflect.Type;
 import java.util.List;
 
-public class RestClassMethod {
-    /// Имя метода
+/**
+ * DTO для представления метода REST контроллера.
+ * <p>
+ * Содержит всю необходимую информацию о методе включая типы запроса/ответа,
+ * HTTP метод, путь эндпоинта и переменные пути.
+ */
+public class RestMethod {
+    /**
+     * Имя метода
+     */
     private String name;
 
-    /// Путь над методом
+    /**
+     * Путь эндпоинта из аннотации маппинга на методе
+     */
     private String endpointPath;
 
-    /// Тело запроса
+    /**
+     * Тип тела запроса (из @RequestBody)
+     */
     private Type request;
 
-    /// Тело ответа
+    /**
+     * Тип тела ответа (возвращаемый тип метода)
+     */
     private Type response;
 
-    /// HTTP-метод
+    /**
+     * HTTP-метод (GET, POST, PUT, DELETE, etc.)
+     */
     private HttpMethod httpMethod;
 
-    /// Переменные пути запроса
+    /**
+     * Переменные пути из аннотаций @PathVariable
+     */
     private List<PathVariableInfo> pathVariables;
 
     /*-------------------------------------------------------*/
