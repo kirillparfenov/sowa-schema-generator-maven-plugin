@@ -1,3 +1,8 @@
+/**
+ * @author Kirill Parfenov
+ * @see https://github.com/kirillparfenov
+ * @since 2025
+ */
 package dev.parfenov.sowa.schema.plugin.generator;
 
 import com.fasterxml.classmate.ResolvedType;

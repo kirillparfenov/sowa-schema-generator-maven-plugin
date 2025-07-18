@@ -1,8 +1,13 @@
+/**
+ * @author Kirill Parfenov
+ * @see https://github.com/kirillparfenov
+ * @since 2025
+ */
 package dev.parfenov.sowa.schema.plugin.exporter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import dev.parfenov.sowa.schema.plugin.generator.GeneratedResult;
+import dev.parfenov.sowa.schema.plugin.generator.dto.GeneratedResult;
 import dev.parfenov.sowa.schema.plugin.sowa.SowaSchema;
 import org.springframework.util.CollectionUtils;
 

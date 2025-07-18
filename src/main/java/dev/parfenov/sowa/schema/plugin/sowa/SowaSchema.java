@@ -1,6 +1,11 @@
+/**
+ * @author Kirill Parfenov
+ * @see https://github.com/kirillparfenov
+ * @since 2025
+ */
 package dev.parfenov.sowa.schema.plugin.sowa;
 
-import dev.parfenov.sowa.schema.plugin.generator.GeneratedResult;
+import dev.parfenov.sowa.schema.plugin.generator.dto.GeneratedResult;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.PathVariableInfo;
 import org.springframework.http.HttpMethod;
 
