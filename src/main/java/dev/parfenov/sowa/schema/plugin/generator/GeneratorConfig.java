@@ -41,6 +41,7 @@ public class GeneratorConfig {
                 .with(Option.DEFINITIONS_FOR_MEMBER_SUPERTYPES)
                 .with(Option.INLINE_NULLABLE_SCHEMAS)
                 .with(Option.MAP_VALUES_AS_ADDITIONAL_PROPERTIES)
+                .with(Option.ENUM_KEYWORD_FOR_SINGLE_VALUES)
                 /// если не передать JakartaValidationOption.INCLUDE_PATTERN_EXPRESSIONS - не будет учитываться аннотация @Pattern
                 /// и даже не передастся String resolveStringPattern(MemberScope<?, ?> member) в  SchemaGeneratorConfigPart<?>.withStringPatternResolver
                 .with(new CustomJakartaValidationModule(stringLengthIncreasePercent, JakartaValidationOption.INCLUDE_PATTERN_EXPRESSIONS));
