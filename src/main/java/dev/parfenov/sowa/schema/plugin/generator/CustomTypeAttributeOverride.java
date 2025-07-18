@@ -5,6 +5,8 @@
  */
 package dev.parfenov.sowa.schema.plugin.generator;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.victools.jsonschema.generator.SchemaGenerationContext;
 import com.github.victools.jsonschema.generator.SchemaKeyword;
@@ -27,7 +29,12 @@ public class CustomTypeAttributeOverride implements TypeAttributeOverrideV2 {
     public void overrideTypeAttributes(ObjectNode schemaNode, TypeScope scope, SchemaGenerationContext context) {
         var type = scope.getType();
         if (type != null && isByteType(type.getErasedType())) {
-            addAdditionalType(schemaNode, SchemaKeyword.SchemaType.INTEGER, context);
+            addAdditionalArrayType(schemaNode, SchemaKeyword.TAG_TYPE_INTEGER, context);
+            addTextFieldIfAbsent(schemaNode, context.getKeyword(SchemaKeyword.TAG_FORMAT), byte.class.getName());
+        }
+
+        if (type != null && type.getErasedType().isEnum()) {
+            repeatEnumLowerCase(schemaNode, context);
         }
     }
 
@@ -42,17 +49,17 @@ public class CustomTypeAttributeOverride implements TypeAttributeOverrideV2 {
     }
 
     /**
-     * Добавляет дополнительный тип к существующей схеме.
-     * Если поле типа уже существует, преобразует его в массив (если необходимо)
+     * Добавляет дополнительный тип к массиву с типами.
+     * Если поле с типами уже существует, преобразует его в массив (если оно одиночное)
      * и добавляет новый тип.
      *
      * @param schemaNode     узел схемы для модификации
      * @param additionalType дополнительный тип для добавления
      * @param context        контекст генерации схемы
      */
-    private void addAdditionalType(ObjectNode schemaNode, SchemaKeyword.SchemaType additionalType, SchemaGenerationContext context) {
+    private void addAdditionalArrayType(ObjectNode schemaNode, SchemaKeyword additionalType, SchemaGenerationContext context) {
         final var typeKeyword = context.getKeyword(SchemaKeyword.TAG_TYPE);
-        final var additionalTypeValue = additionalType.getSchemaKeywordValue();
+        final var additionalTypeValue = context.getKeyword(additionalType);
 
         if (!schemaNode.has(typeKeyword)) {
             initializeTypeArray(schemaNode, typeKeyword);
@@ -104,5 +111,39 @@ public class CustomTypeAttributeOverride implements TypeAttributeOverrideV2 {
      */
     private void addTypeToExistingArray(ObjectNode schemaNode, String typeKeyword, String additionalTypeValue) {
         schemaNode.withArray(typeKeyword).add(additionalTypeValue);
+    }
+
+    /**
+     * Добавляет текстовое поле в узел схемы, если оно отсутствует.
+     * Проверяет наличие поля с указанным именем и добавляет его только в случае отсутствия.
+     *
+     * @param schemaNode узел схемы для модификации
+     * @param fieldName  имя поля для добавления
+     * @param fieldValue значение поля для добавления
+     */
+    private void addTextFieldIfAbsent(ObjectNode schemaNode, String fieldName, String fieldValue) {
+        if (!schemaNode.has(fieldName)) {
+            schemaNode.put(fieldName, fieldValue);
+        }
+    }
+
+    /**
+     * Дублирует значения enum в нижнем регистре в схеме JSON.
+     * Берет существующий массив enum значений, преобразует их в нижний регистр
+     * и добавляет эти варианты к исходному массиву для поддержки case-insensitive валидации.
+     *
+     * @param schemaNode узел схемы для модификации
+     * @param context    контекст генерации схемы
+     */
+    private void repeatEnumLowerCase(ObjectNode schemaNode, SchemaGenerationContext context) {
+        var enumNode = schemaNode.get(context.getKeyword(SchemaKeyword.TAG_ENUM));
+        if (enumNode instanceof ArrayNode arrayNode) {
+            arrayNode.valueStream()
+                    .filter(JsonNode::isTextual)
+                    .map(JsonNode::asText)
+                    .map(String::toLowerCase)
+                    .toList()
+                    .forEach(arrayNode::add);
+        }
     }
 }
