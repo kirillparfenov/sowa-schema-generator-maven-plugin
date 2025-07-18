@@ -11,8 +11,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static dev.parfenov.sowa.schema.plugin.generator.SchemaAnnotationExtractor.getSchemaAnnotationValue;
 import static dev.parfenov.sowa.schema.plugin.generator.ConstraintResolver.resolveNumericMaximum;
+import static dev.parfenov.sowa.schema.plugin.generator.MemberAnnotationExtractor.getSchemaAnnotationValue;
 import static dev.parfenov.sowa.schema.plugin.generator.ValidationConstants.ARRAY_MAX_SIZE;
 
 /**
@@ -53,19 +53,20 @@ public class CustomJakartaValidationModule extends JakartaValidationModule {
     }
 
     /**
-     * Применяет настройки к общей части конфигурации.
-     */
-    private void applyToConfigBuilder(SchemaGeneratorConfigPart<?> configPart) {
-        configPart.withDescriptionResolver(this::resolveDescription);
-    }
-
-    /**
      * Применяет настройки к общей конфигурации типов.
      */
     private void applyToConfigBuilder(SchemaGeneratorGeneralConfigPart configPart) {
         configPart.withArrayMaxItemsResolver(this::resolveArrayMaxItems);
         configPart.withNumberInclusiveMaximumResolver(this::resolveTypeMaximum);
+        configPart.withCustomDefinitionProvider(new ObjectDefaultDefinitionProvider());
         configPart.withDescriptionResolver(this.createTypePropertyResolver(Schema::description, description -> !description.isBlank()));
+    }
+
+    /**
+     * Применяет настройки к общей части конфигурации.
+     */
+    private void applyToConfigBuilder(SchemaGeneratorConfigPart<?> configPart) {
+        configPart.withDescriptionResolver(this::resolveDescription);
     }
 
     /**
@@ -98,7 +99,7 @@ public class CustomJakartaValidationModule extends JakartaValidationModule {
         return super.isNullable(member);
 //        return Optional
 //                .ofNullable(super.isNullable(member))
-//                .orElseGet(() -> checkNullable(member)); //todo вернуть, если потребуется
+//                .orElseGet(() -> checkNullable(member)); //вернуть, если потребуется
     }
 
     /**
@@ -143,13 +144,13 @@ public class CustomJakartaValidationModule extends JakartaValidationModule {
             return null;
         }
 
-        Integer maxItems = super.resolveArrayMaxItems(member);
+        var maxItems = super.resolveArrayMaxItems(member);
         return Objects.isNull(maxItems) ? ARRAY_MAX_SIZE : maxItems;
     }
 
     @Override
     protected Integer resolveStringMinLength(MemberScope<?, ?> member) {
-        Integer stringMinLength = super.resolveStringMinLength(member);
+        var stringMinLength = super.resolveStringMinLength(member);
         if (stringMinLength != null) {
             return stringMinLength;
         }

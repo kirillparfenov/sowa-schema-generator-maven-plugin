@@ -14,9 +14,9 @@ import java.util.function.Predicate;
  * Предоставляет единообразные методы для получения значений из различных
  * аннотаций валидации с учетом приоритетов и фильтрации.
  */
-public final class SchemaAnnotationExtractor {
+public final class MemberAnnotationExtractor {
 
-    private SchemaAnnotationExtractor() {
+    private MemberAnnotationExtractor() {
     }
 
     /**

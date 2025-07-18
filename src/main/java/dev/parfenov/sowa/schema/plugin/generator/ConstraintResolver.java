@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
-import static dev.parfenov.sowa.schema.plugin.generator.SchemaAnnotationExtractor.getSchemaAnnotationValue;
+import static dev.parfenov.sowa.schema.plugin.generator.MemberAnnotationExtractor.getSchemaAnnotationValue;
 import static dev.parfenov.sowa.schema.plugin.generator.ValidationConstants.DEFAULT_STRING_MAX_LENGTH;
 import static dev.parfenov.sowa.schema.plugin.generator.ValidationConstants.UUID_MAX_LENGTH;
 

@@ -56,7 +56,7 @@ public class GitDiffParser {
             return;
         }
 
-        var sourceDependencies = buildDependencyMap(scanResult);
+        var sourceDependencies = buildDependencyMap();
 
         for (var restClass : parsedClasses) {
             processRestClassMethods(restClass, sourceDependencies);
@@ -66,10 +66,9 @@ public class GitDiffParser {
     /**
      * Строит карту зависимостей между исходными файлами.
      *
-     * @param scanResult результат сканирования классов
      * @return карта где ключ - файл, значение - множество зависимых файлов
      */
-    private Map<String, Set<String>> buildDependencyMap(ScanResult scanResult) {
+    private Map<String, Set<String>> buildDependencyMap() {
         return scanResult.getClassDependencyMap()
                 .entrySet()
                 .stream()
