@@ -4,14 +4,15 @@ import dev.parfenov.sowa.schema.plugin.parsers.dto.RestClass;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.RestMethod;
 import io.github.classgraph.ClassInfo;
 import org.springframework.util.DigestUtils;
-import org.springframework.util.SerializationUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Builder для создания объектов RestClass.
@@ -22,7 +23,8 @@ import java.util.Map;
 public class RestClassBuilder {
 
     private final RestClass restClass;
-    private final Map<String, RestMethod> methodMap;
+    private final List<RestMethod> restMethods = new ArrayList<>();
+    private final Set<String> restMethodNames = new HashSet<>();
     private final EndpointPathParser endpointPathParser;
     private final TypesParser typesParser;
 
@@ -34,7 +36,6 @@ public class RestClassBuilder {
      */
     public RestClassBuilder(EndpointPathParser endpointPathParser, TypesParser typesParser) {
         this.restClass = new RestClass();
-        this.methodMap = new HashMap<>();
         this.endpointPathParser = endpointPathParser;
         this.typesParser = typesParser;
     }
@@ -78,7 +79,7 @@ public class RestClassBuilder {
      * @return готовый объект RestClass
      */
     public RestClass build() {
-        restClass.setMethods(new ArrayList<>(methodMap.values()));
+        restClass.setMethods(restMethods);
         return restClass;
     }
 
@@ -116,12 +117,29 @@ public class RestClassBuilder {
         for (var method : classMembers.getMemberMethods()) {
             var requestMapping = AnnotationParser.directOnMethodOrAnnotations(RequestMapping.class, method.getRawMember());
             if (requestMapping != null) {
-                var mapKey = createUniqueMethodName(method.getRawMember());
-                var existingMethod = methodMap.getOrDefault(mapKey, new RestMethod());
-                var restMethod = buildRestMethod(method.getRawMember(), existingMethod);
-                methodMap.put(mapKey, restMethod);
+                var restMethod = buildRestMethod(method.getRawMember(), new RestMethod());
+                restMethods.add(restMethod);
+                restMethodNames.add(restMethod.getName());
             }
         }
+    }
+
+    /**
+     * Строит объект REST метода из Java метода.
+     *
+     * @param realMethod  Java метод (рефлексия)
+     * @param builtMethod метод мы строим
+     * @return построенный REST метод
+     */
+    private RestMethod buildRestMethod(Method realMethod, RestMethod builtMethod) {
+        return new RestMethodBuilder(realMethod, builtMethod, endpointPathParser)
+                .withName(createUniqueMethodName(realMethod))
+                .withPathVariables()
+                .withRequest()
+                .withResponse()
+                .withEndpointPath()
+                .withHttpMethod()
+                .build();
     }
 
     /**
@@ -132,26 +150,10 @@ public class RestClassBuilder {
      */
     private String createUniqueMethodName(Method method) {
         var methodName = method.getName();
-        var methodBytes = SerializationUtils.serialize(method.toString());
-        var md5 = DigestUtils.md5DigestAsHex(methodBytes != null ? methodBytes : methodName.getBytes());
-        return methodName + "_" + md5;
-    }
+        if (!restMethodNames.contains(methodName)) return methodName;
 
-    /**
-     * Строит объект REST метода из Java метода.
-     *
-     * @param method         Java метод
-     * @param existingMethod существующий объект метода
-     * @return построенный REST метод
-     */
-    private RestMethod buildRestMethod(Method method, RestMethod existingMethod) {
-        return new RestMethodBuilder(method, existingMethod, endpointPathParser)
-                .withName()
-                .withPathVariables()
-                .withRequest()
-                .withResponse()
-                .withEndpointPath()
-                .withHttpMethod()
-                .build();
+        var bytes = method.toString().getBytes(StandardCharsets.UTF_8);
+        var hash = DigestUtils.md5DigestAsHex(bytes).substring(0, 4);
+        return methodName + "_" + hash;
     }
 } 

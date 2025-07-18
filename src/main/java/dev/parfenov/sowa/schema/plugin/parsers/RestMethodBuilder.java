@@ -35,10 +35,11 @@ public class RestMethodBuilder {
     /**
      * Устанавливает имя метода.
      *
+     * @param uniqueMethodName уникальное имя метода
      * @return builder для цепочки вызовов
      */
-    public RestMethodBuilder withName() {
-        restMethod.setName(method.getName());
+    public RestMethodBuilder withName(String uniqueMethodName) {
+        restMethod.setName(uniqueMethodName);
         return this;
     }
 

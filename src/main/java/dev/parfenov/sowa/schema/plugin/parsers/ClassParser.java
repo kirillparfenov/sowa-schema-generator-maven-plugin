@@ -95,6 +95,4 @@ public class ClassParser {
 
         return builder.build();
     }
-
-
 }
