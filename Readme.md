@@ -108,13 +108,76 @@ mvn sowa-schema-generator:generateSchema -DonlyGitDiff=true
 </configuration>
 ```
 
+## Примеры использования схем
+
+### Работа с типом Object
+
+Плагин предоставляет специальную обработку для типа `Object` в ваших моделях данных.
+
+#### Схема по умолчанию для Object
+
+Если в вашем классе есть поле типа `Object` без дополнительных аннотаций:
+
+```java
+@Getter
+@Setter
+public class ExampleDefault {
+    private Object anyObject;
+}
+```
+
+То для него будет сгенерирована схема по умолчанию:
+
+```json
+{
+  "anyObject": {
+    "type": ["object", "null"],
+    "additionalProperties": true
+  }
+}
+```
+
+#### Указание подтипов с помощью аннотаций Jackson
+
+Для более точного определения возможных типов объекта используйте аннотации `@JsonTypeInfo` и `@JsonSubTypes`:
+
+```java
+@Getter
+@Setter
+public class ExampleSubTypes {
+    @JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS)
+    @JsonSubTypes({
+            @JsonSubTypes.Type(value = SubType1.class),
+            @JsonSubTypes.Type(value = SubType2.class),
+    })
+    private Object anyObject;
+}
+```
+
+В этом случае плагин сгенерирует схему, учитывающую указанные подтипы, вместо использования схемы по умолчанию.
+
+#### Указание подтипов для интерфейсов
+
+Аналогично, вы можете использовать те же аннотации на интерфейсах для указания конкретных типов реализаций:
+
+```java
+@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = SubType1.class),
+        @JsonSubTypes.Type(value = SubType2.class),
+})
+public interface BaseDto {}
+```
+
+Это особенно полезно когда ваши REST контроллеры возвращают интерфейсы, а плагину нужно знать о возможных конкретных реализациях для корректной генерации схемы.
+
 ## Поддерживаемые аннотации
 
 Плагин поддерживает следующие аннотации:
 
 - **Spring Web**: `@RestController`, `@RequestMapping`, `@GetMapping`, `@PostMapping`, etc.
 - **Jakarta Validation**: `@NotNull`, `@Size`, `@Pattern`, `@Min`, `@Max`, etc.
-- **Swagger/OpenAPI**: `@Schema`, `@ArraySchema` для дополнительных метаданных
+- **Swagger/OpenAPI**: `@Schema` для дополнительных метаданных
 
 ## Структура выходных файлов
 
