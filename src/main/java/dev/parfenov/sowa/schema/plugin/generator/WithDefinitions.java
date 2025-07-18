@@ -1,6 +1,12 @@
+/**
+ * @author Kirill Parfenov
+ * @see https://github.com/kirillparfenov
+ * @since 2025
+ */
 package dev.parfenov.sowa.schema.plugin.generator;
 
 import com.github.victools.jsonschema.generator.SchemaGenerator;
+import dev.parfenov.sowa.schema.plugin.generator.dto.GeneratedResult;
 
 import java.lang.reflect.Type;
 import java.util.List;

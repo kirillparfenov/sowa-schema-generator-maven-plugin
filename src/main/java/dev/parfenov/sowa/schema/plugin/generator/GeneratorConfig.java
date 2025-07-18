@@ -1,3 +1,8 @@
+/**
+ * @author Kirill Parfenov
+ * @see https://github.com/kirillparfenov
+ * @since 2025
+ */
 package dev.parfenov.sowa.schema.plugin.generator;
 
 import com.github.victools.jsonschema.generator.*;
@@ -30,9 +35,11 @@ public class GeneratorConfig {
                 .with(Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT)
                 .with(Option.NULLABLE_ARRAY_ITEMS_ALLOWED)
                 .with(Option.NULLABLE_FIELDS_BY_DEFAULT)
+                .with(Option.NULLABLE_METHOD_RETURN_VALUES_BY_DEFAULT)
                 .with(Option.EXTRA_OPEN_API_FORMAT_VALUES)
                 .with(Option.DEFINITIONS_FOR_ALL_OBJECTS)
                 .with(Option.DEFINITIONS_FOR_MEMBER_SUPERTYPES)
+                .with(Option.INLINE_NULLABLE_SCHEMAS)
                 .with(Option.MAP_VALUES_AS_ADDITIONAL_PROPERTIES)
                 /// если не передать JakartaValidationOption.INCLUDE_PATTERN_EXPRESSIONS - не будет учитываться аннотация @Pattern
                 /// и даже не передастся String resolveStringPattern(MemberScope<?, ?> member) в  SchemaGeneratorConfigPart<?>.withStringPatternResolver

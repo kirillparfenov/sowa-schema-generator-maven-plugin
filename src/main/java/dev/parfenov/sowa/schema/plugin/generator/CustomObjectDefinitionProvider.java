@@ -1,3 +1,8 @@
+/**
+ * @author Kirill Parfenov
+ * @see https://github.com/kirillparfenov
+ * @since 2025
+ */
 package dev.parfenov.sowa.schema.plugin.generator;
 
 import com.fasterxml.classmate.ResolvedType;
@@ -19,7 +24,7 @@ import com.github.victools.jsonschema.generator.SchemaKeyword;
  * @author Кирилл Парфенов (@kirillparfenov)
  * @see CustomDefinitionProviderV2
  */
-public class ObjectDefaultDefinitionProvider implements CustomDefinitionProviderV2 {
+public class CustomObjectDefinitionProvider implements CustomDefinitionProviderV2 {
 
     /**
      * Предоставляет кастомное определение схемы для указанного Java типа.

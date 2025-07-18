@@ -1,6 +1,11 @@
+/**
+ * @author Kirill Parfenov
+ * @see https://github.com/kirillparfenov
+ * @since 2025
+ */
 package dev.parfenov.sowa.schema.plugin.sowa;
 
-import dev.parfenov.sowa.schema.plugin.generator.GeneratedResult;
+import dev.parfenov.sowa.schema.plugin.generator.dto.GeneratedResult;
 import dev.parfenov.sowa.schema.plugin.generator.Generator;
 import dev.parfenov.sowa.schema.plugin.parsers.EndpointPathParser;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.RestClass;
