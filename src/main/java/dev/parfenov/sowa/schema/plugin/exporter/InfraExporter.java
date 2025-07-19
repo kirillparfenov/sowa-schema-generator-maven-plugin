@@ -18,6 +18,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -72,13 +73,17 @@ public class InfraExporter {
      * @return список конфигураций сервисов
      */
     private List<ServicesYaml> createServicesYaml(List<RestClass> restClasses) {
-        return restClasses.stream()
+        var services = restClasses.stream()
                 .filter(Objects::nonNull)
-                .flatMap(restClass -> restClass.getMethods().stream()
-                        .filter(Objects::nonNull)
-                        .map(method -> createServiceYaml(restClass, method))
+                .flatMap(restClass ->
+                        restClass.getMethods()
+                                .stream()
+                                .filter(Objects::nonNull)
+                                .map(method -> createServiceYaml(restClass, method))
                 )
-                .toList();
+                .collect(Collectors.toList());
+
+        return new GroupBy(servicesFactory).url(services);
     }
 
     /**
@@ -89,8 +94,8 @@ public class InfraExporter {
      * @return конфигурация сервиса
      */
     private ServicesYaml createServiceYaml(RestClass restClass, RestMethod restMethod) {
-        var schemaName = endpointPathParser.schemaName(restClass, restMethod);
-        var fullPath = PROXY_PREFIX + endpointPathParser.resolvePathWithVariables(restClass, restMethod);
+        var schemaName = getSchemaName(restClass, restMethod);
+        var fullPath = getFullPath(restClass, restMethod);
 
         return servicesFactory.createService(
                 schemaName,
@@ -103,7 +108,7 @@ public class InfraExporter {
     /**
      * Создает валидатор для метода.
      *
-     * @param restMethod       REST метод
+     * @param restMethod REST метод
      * @param schemaName имя схемы
      * @return конфигурация валидатора
      */
@@ -118,7 +123,7 @@ public class InfraExporter {
     /**
      * Формирует блок request/response.
      *
-     * @param restMethod       REST метод
+     * @param restMethod REST метод
      * @param schemaName имя схемы
      * @return список конфигураций запросов
      */
@@ -132,7 +137,7 @@ public class InfraExporter {
     /**
      * Создает блок с конфигурацией запроса
      *
-     * @param restMethod       REST метод
+     * @param restMethod REST метод
      * @param schemaName имя схемы
      * @return null, либо конфигурацию с запросом
      */
@@ -151,7 +156,7 @@ public class InfraExporter {
     /**
      * Создает конфигурации ответов (включая успешные и ошибочные).
      *
-     * @param restMethod       REST метод
+     * @param restMethod REST метод
      * @param schemaName имя схемы
      * @return список конфигураций ответов
      */
@@ -167,7 +172,7 @@ public class InfraExporter {
     /**
      * Создает блок с конфигурацией 2XX ответа
      *
-     * @param restMethod       REST метод
+     * @param restMethod REST метод
      * @param schemaName имя схемы
      * @return null, либо конфигурацию с успешным ответом
      */
@@ -252,15 +257,39 @@ public class InfraExporter {
     }
 
     /**
+     * Возвращает URL - полный путь до REST-endpoint
+     *
+     * @param restClass  REST класс
+     * @param restMethod метод из REST класса
+     * @return полный путь до REST-endpoint
+     */
+    private String getFullPath(RestClass restClass, RestMethod restMethod) {
+        return PROXY_PREFIX + endpointPathParser.resolvePathWithVariables(restClass, restMethod);
+    }
+
+    /**
+     * Возвращает имя файла с JSON-схемой
+     *
+     * @param restClass  REST класс
+     * @param restMethod метод из REST класса
+     * @return имя файла JSON-схемы
+     */
+    private String getSchemaName(RestClass restClass, RestMethod restMethod) {
+        return isVoidResponse(restMethod.getResponse())
+                ? EMPTY_RESPONSE
+                : endpointPathParser.schemaName(restClass, restMethod);
+    }
+
+    /**
      * Строит имя response - схемы
      *
-     * @param restMethod       метод контроллера
+     * @param restMethod метод контроллера
      * @param schemaName имя схемы
      * @return имя файла response - схемы, либо empty_object.json при response == void
      */
     private String buildResponseFilename(RestMethod restMethod, String schemaName) {
         return isVoidResponse(restMethod.getResponse())
-                ? EMPTY_RESPONSE
+                ? schemaName
                 : schemaName + RESPONSE_SUFFIX;
     }
 
