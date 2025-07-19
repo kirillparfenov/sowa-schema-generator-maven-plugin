@@ -10,6 +10,7 @@ import dev.parfenov.sowa.schema.plugin.parsers.dto.RestClass;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.RestMethod;
 import io.github.classgraph.ClassInfo;
 import org.apache.maven.project.MavenProject;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.lang.reflect.Method;
@@ -41,9 +42,9 @@ public class EndpointPathParser {
      * @return полный путь с regex паттернами для переменных пути
      */
     public String resolvePathWithVariables(RestClass restClass, RestMethod restMethod) {
-        var fullPath = "^/proxy" + contextPath() + restClass.getEndpointPath() + restMethod.getEndpointPath() + "$";
+        var fullPath =  contextPath() + restClass.getEndpointPath() + restMethod.getEndpointPath() + "$";
         var pathVariables = restMethod.getPathVariables();
-        if (pathVariables == null || pathVariables.isEmpty()) {
+        if (CollectionUtils.isEmpty(pathVariables)) {
             return fullPath;
         }
 
@@ -72,7 +73,7 @@ public class EndpointPathParser {
      * @param restMethod метод контроллера
      * @return имя схемы в формате "ClassName_methodName"
      */
-    public String endpointToSchema(RestClass restClass, RestMethod restMethod) {
+    public String schemaName(RestClass restClass, RestMethod restMethod) {
         return restClass.getName().concat("_").concat(restMethod.getName());
     }
 

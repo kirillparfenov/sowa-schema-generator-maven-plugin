@@ -11,153 +11,320 @@ import dev.parfenov.sowa.schema.plugin.exporter.dto.ServicesYaml;
 import dev.parfenov.sowa.schema.plugin.parsers.EndpointPathParser;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.RestClass;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.RestMethod;
+import org.springframework.util.CollectionUtils;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static dev.parfenov.sowa.schema.plugin.exporter.ExportDirectories.INFRASTRUCTURE_DIRECTORY;
-import static dev.parfenov.sowa.schema.plugin.exporter.ExportDirectories.SOWA_DIRECTORY;
-
+/**
+ * Экспортер инфраструктурных конфигураций SOWA.
+ * Создает services.yml файл с настройками валидации схем для REST эндпоинтов.
+ */
 public class InfraExporter {
 
+    private static final String PROXY_PREFIX = "^/proxy";
     private static final String SCHEMA_PREFIX = "schemes/json/";
+    private static final String EMPTY_RESPONSE = "empty_object.json";
     private static final String RESPONSE_SUFFIX = "_response.json";
     private static final String REQUEST_SUFFIX = "_request.json";
+    private static final String REQUEST_PATH = "/request/";
+    private static final String RESPONSE_PATH = "/response/";
+    private static final String ERROR_RESPONSE_SCHEMA = "error_response_4XX.json";
+    private static final String SUCCESS_CODE_PATTERN = "^2\\d{2}$";
+    private static final String ERROR_CODE_PATTERN = "^4\\d{2}$";
+    private static final char REGEX_OPERATOR = '~';
 
     private final InfraConfig infraConfig;
     private final EndpointPathParser endpointPathParser;
+    private final DirectoriesBuilder directoriesBuilder;
+    private final ServicesYamlFactory servicesFactory;
 
     public InfraExporter(final InfraConfig infraConfig) {
         this.infraConfig = infraConfig;
         this.endpointPathParser = new EndpointPathParser(infraConfig.project());
+        this.directoriesBuilder = infraConfig.directoriesBuilder();
+        this.servicesFactory = new ServicesYamlFactory();
     }
 
     /**
-     * Экспорт обвязки SOWA
+     * Экспортирует конфигурацию services.yml для REST классов.
+     *
+     * @param restClasses коллекция REST классов для экспорта
+     * @throws InfraExportException если произошла ошибка при экспорте
      */
     public void export(List<RestClass> restClasses) {
-        //todo нужно объединить RestClass по адресу до эндпоинта:
-        // Map<String, List<RestClass>> - потому что на 1 адрес могут быть разные HTTP-методы
-        var servicesYaml = new ArrayList<ServicesYaml>();
-        for (var restClass : restClasses) {
-            for (var restMethod : restClass.getMethods()) {
-                var serviceYaml = new ServicesYaml();
-
-                var endpointToSchema = endpointPathParser.endpointToSchema(restClass, restMethod);
-                serviceYaml.setId(endpointToSchema);
-                serviceYaml.setName(endpointToSchema);
-
-                var fullPathWithRegex = endpointPathParser.resolvePathWithVariables(restClass, restMethod);
-                serviceYaml.setUrl(fullPathWithRegex);
-
-                serviceYaml.setAllowedQueries(getAllowedQueries(restMethod));
-
-                var requests = getRequest(restMethod, endpointToSchema);
-                var responses = getResponse(restMethod, endpointToSchema);
-                var jsonValidator = getValidatorJson(requests, responses);
-                var validator = new ServicesYaml.Validator();
-                validator.setValidatorJson(jsonValidator);
-                serviceYaml.setValidators(validator);
-
-                servicesYaml.add(serviceYaml);
-            }
-
-            var sowaDir = new File(infraConfig.project().getBuild().getDirectory(), SOWA_DIRECTORY);
-            var servicesDir = new File(sowaDir, INFRASTRUCTURE_DIRECTORY);
-            servicesDir.mkdirs();
-            var servicesYamlFile = new File(servicesDir, "services.yml");
-            var yamlMapper = new YAMLMapper();
-            try {
-                yamlMapper.configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true);
-                yamlMapper.writeValue(servicesYamlFile, servicesYaml);
-            } catch (IOException e) {
-                throw new RuntimeException("Ошибка во время экспорта services.yml", e);
-            }
+        if (CollectionUtils.isEmpty(restClasses)) {
+            return;
         }
+
+        var servicesYaml = createServicesYaml(restClasses);
+        exportYamlFile(servicesYaml);
     }
 
+    /**
+     * Создает коллекцию ServicesYaml из REST классов.
+     *
+     * @param restClasses коллекция REST классов
+     * @return список конфигураций сервисов
+     */
+    private List<ServicesYaml> createServicesYaml(List<RestClass> restClasses) {
+        var services = restClasses.stream()
+                .filter(Objects::nonNull)
+                .flatMap(restClass ->
+                        restClass.getMethods()
+                                .stream()
+                                .filter(Objects::nonNull)
+                                .map(method -> createServiceYaml(restClass, method))
+                )
+                .collect(Collectors.toList());
+
+        return new GroupBy(servicesFactory).url(services);
+    }
+
+    /**
+     * Создает конфигурацию сервиса для одного метода.
+     *
+     * @param restClass  REST класс
+     * @param restMethod REST метод
+     * @return конфигурация сервиса
+     */
+    private ServicesYaml createServiceYaml(RestClass restClass, RestMethod restMethod) {
+        var schemaName = getSchemaName(restClass, restMethod);
+        var fullPath = getFullPath(restClass, restMethod);
+
+        return servicesFactory.createService(
+                schemaName,
+                fullPath,
+                getAllowedQueries(restMethod),
+                createValidator(restMethod, schemaName)
+        );
+    }
+
+    /**
+     * Создает валидатор для метода.
+     *
+     * @param restMethod REST метод
+     * @param schemaName имя схемы
+     * @return конфигурация валидатора
+     */
+    private ServicesYaml.Validator createValidator(RestMethod restMethod, String schemaName) {
+        var requests = createRequests(restMethod, schemaName);
+        var responses = createResponses(restMethod, schemaName);
+
+        var jsonValidator = servicesFactory.createValidatorJson(requests, responses);
+        return servicesFactory.createValidator(jsonValidator);
+    }
+
+    /**
+     * Формирует блок request/response.
+     *
+     * @param restMethod REST метод
+     * @param schemaName имя схемы
+     * @return список конфигураций запросов
+     */
+    private List<ServicesYaml.RequestResponse> createRequests(RestMethod restMethod, String schemaName) {
+        return Optional
+                .ofNullable(createSuccessRequest(restMethod, schemaName))
+                .map(List::of)
+                .orElseGet(List::of);
+    }
+
+    /**
+     * Создает блок с конфигурацией запроса
+     *
+     * @param restMethod REST метод
+     * @param schemaName имя схемы
+     * @return null, либо конфигурацию с запросом
+     */
+    private ServicesYaml.RequestResponse createSuccessRequest(RestMethod restMethod, String schemaName) {
+        if (restMethod.getRequest() == null) return null;
+
+        var schemaPath = buildSchemaPath(REQUEST_PATH, schemaName + REQUEST_SUFFIX);
+
+        return servicesFactory.createRequestResponse(
+                getHttpMethodName(restMethod),
+                schemaPath,
+                null
+        );
+    }
+
+    /**
+     * Создает конфигурации ответов (включая успешные и ошибочные).
+     *
+     * @param restMethod REST метод
+     * @param schemaName имя схемы
+     * @return список конфигураций ответов
+     */
+    private List<ServicesYaml.RequestResponse> createResponses(RestMethod restMethod, String schemaName) {
+        return Stream.of(
+                        create2xxResponse(restMethod, schemaName),
+                        create4xxResponse(restMethod)
+                )
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    /**
+     * Создает блок с конфигурацией 2XX ответа
+     *
+     * @param restMethod REST метод
+     * @param schemaName имя схемы
+     * @return null, либо конфигурацию с успешным ответом
+     */
+    private ServicesYaml.RequestResponse create2xxResponse(RestMethod restMethod, String schemaName) {
+        if (restMethod.getResponse() == null) return null;
+
+        var httpMethod = getHttpMethodName(restMethod);
+        var fileName = buildResponseFilename(restMethod, schemaName);
+        var schemaPath = buildSchemaPath(RESPONSE_PATH, fileName);
+        var successCode = servicesFactory.createResponseCode(REGEX_OPERATOR, SUCCESS_CODE_PATTERN);
+
+        return servicesFactory.createRequestResponse(
+                httpMethod,
+                schemaPath,
+                successCode
+        );
+    }
+
+    /**
+     * Создает блок с конфигурацией 4XX ответа
+     *
+     * @param restMethod REST метод
+     * @return конфигурацию с 4XX ответом
+     */
+    private ServicesYaml.RequestResponse create4xxResponse(RestMethod restMethod) {
+        var httpMethod = getHttpMethodName(restMethod);
+        var errorSchemaPath = buildSchemaPath(RESPONSE_PATH, ERROR_RESPONSE_SCHEMA);
+        var errorCode = servicesFactory.createResponseCode(REGEX_OPERATOR, ERROR_CODE_PATTERN);
+
+        return servicesFactory.createRequestResponse(
+                httpMethod,
+                errorSchemaPath,
+                errorCode
+        );
+    }
+
+    /**
+     * Извлекает имя HTTP-метода и конвертирует его в String.lowerCase
+     *
+     * @param restMethod метод контроллера
+     * @return название HTTP метода в нижнем регистре
+     */
+    private String getHttpMethodName(RestMethod restMethod) {
+        return restMethod.getHttpMethod().name().toLowerCase();
+    }
+
+    /**
+     * Проверка, что ответ метода void
+     *
+     * @param responseType тип ответа метода
+     * @return true, если ответ метода является пустым
+     */
+    private boolean isVoidResponse(Type responseType) {
+        return Optional
+                .ofNullable(responseType)
+                .map(void.class::equals)
+                .orElse(false);
+    }
+
+    /**
+     * Создает список разрешенных запросов для метода.
+     *
+     * @param method REST метод
+     * @return список разрешенных запросов
+     */
     private List<ServicesYaml.AllowedQuery> getAllowedQueries(RestMethod method) {
-        var allowedQuery = new ServicesYaml.AllowedQuery();
-        allowedQuery.setMethod(method.getHttpMethod().name().toLowerCase());
+        var allowedQuery = servicesFactory.createAllowedQuery(
+                method.getHttpMethod().name().toLowerCase()
+        );
         return List.of(allowedQuery);
     }
 
-    private List<ServicesYaml.RequestResponse> getResponse(RestMethod restMethod, String endpointToSchema) {
-        var responses = new ArrayList<ServicesYaml.RequestResponse>();
-        var response = buildResponse(restMethod, endpointToSchema);
-        if (response != null) {
-            responses.add(response);
+    /**
+     * Строит полный путь к схеме.
+     *
+     * @param destination папка назначения (/request/ или /response/)
+     * @param fileName    имя файла схемы
+     * @return полный путь к схеме
+     */
+    private String buildSchemaPath(String destination, String fileName) {
+        return SCHEMA_PREFIX + infraConfig.sowaProfileName() + destination + fileName;
+    }
+
+    /**
+     * Возвращает URL - полный путь до REST-endpoint
+     *
+     * @param restClass  REST класс
+     * @param restMethod метод из REST класса
+     * @return полный путь до REST-endpoint
+     */
+    private String getFullPath(RestClass restClass, RestMethod restMethod) {
+        return PROXY_PREFIX + endpointPathParser.resolvePathWithVariables(restClass, restMethod);
+    }
+
+    /**
+     * Возвращает имя файла с JSON-схемой
+     *
+     * @param restClass  REST класс
+     * @param restMethod метод из REST класса
+     * @return имя файла JSON-схемы
+     */
+    private String getSchemaName(RestClass restClass, RestMethod restMethod) {
+        return isVoidResponse(restMethod.getResponse())
+                ? EMPTY_RESPONSE
+                : endpointPathParser.schemaName(restClass, restMethod);
+    }
+
+    /**
+     * Строит имя response - схемы
+     *
+     * @param restMethod метод контроллера
+     * @param schemaName имя схемы
+     * @return имя файла response - схемы, либо empty_object.json при response == void
+     */
+    private String buildResponseFilename(RestMethod restMethod, String schemaName) {
+        return isVoidResponse(restMethod.getResponse())
+                ? schemaName
+                : schemaName + RESPONSE_SUFFIX;
+    }
+
+    /**
+     * Экспортирует services.yml файл.
+     *
+     * @param servicesYaml список конфигураций сервисов
+     * @throws InfraExportException если произошла ошибка записи
+     */
+    private void exportYamlFile(List<ServicesYaml> servicesYaml) {
+        try {
+            createYamlMapper().writeValue(directoriesBuilder.servicesYamlFile(), servicesYaml);
+        } catch (IOException e) {
+            throw new InfraExportException("Ошибка записи файла services.yml", e);
         }
-        responses.add(buildError400Response(restMethod));
-        return responses;
     }
 
-    private List<ServicesYaml.RequestResponse> getRequest(RestMethod restMethod, String endpointToSchema) {
-        var requests = new ArrayList<ServicesYaml.RequestResponse>();
-        var request = buildRequest(restMethod, endpointToSchema);
-        if (request != null) {
-            requests.add(request);
+    /**
+     * Создает настроенный YAML маппер.
+     *
+     * @return настроенный YAMLMapper
+     */
+    private YAMLMapper createYamlMapper() {
+        return new YAMLMapper()
+                .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true)
+                .configure(YAMLGenerator.Feature.ALLOW_LONG_KEYS, true)
+                .configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false);
+    }
+
+    /**
+     * Исключение, выбрасываемое при ошибках экспорта инфраструктуры.
+     */
+    public static class InfraExportException extends RuntimeException {
+        public InfraExportException(String message, Throwable cause) {
+            super(message, cause);
         }
-        return requests;
-    }
-
-    public ServicesYaml.RequestResponse buildRequest(RestMethod method, String endpointToSchema) {
-        if (method.getRequest() == null) return null;
-
-        var requestResponse = new ServicesYaml.RequestResponse();
-        requestResponse.setMethod(method.getHttpMethod().name().toLowerCase());
-        requestResponse.setSchema(getSchemaName("/request/", endpointToSchema.concat(REQUEST_SUFFIX)));
-        requestResponse.setAllowEmptyBody(true);
-        return requestResponse;
-    }
-
-    private ServicesYaml.RequestResponse buildResponse(RestMethod method, String endpointToSchema) {
-        if (method.getResponse() == null) return null;
-
-        var response = new ServicesYaml.RequestResponse();
-        response.setMethod(method.getHttpMethod().name().toLowerCase());
-        response.setSchema(getSchemaName("/response/", endpointToSchema.concat(RESPONSE_SUFFIX)));
-        response.setAllowEmptyBody(true);
-        response.setResponseCode(buildCode('~', "^2\\d{2}$"));
-        return response;
-    }
-
-    private ServicesYaml.RequestResponse buildError400Response(RestMethod restMethod) {
-        var response = new ServicesYaml.RequestResponse();
-        response.setMethod(restMethod.getHttpMethod().name().toLowerCase());
-        response.setSchema(getSchemaName("/response/", "error_response_4XX.json"));
-        response.setAllowEmptyBody(true);
-        response.setResponseCode(buildCode('~', "^4\\d{2}$"));
-        return response;
-    }
-
-    private ServicesYaml.ResponseCode buildCode(char operator, String pattern) {
-        var responseCode = new ServicesYaml.ResponseCode();
-        responseCode.setOperator(operator);
-        responseCode.setPattern(pattern);
-        return responseCode;
-    }
-
-    private ServicesYaml.ValidatorJson getValidatorJson(
-            List<ServicesYaml.RequestResponse> requests,
-            List<ServicesYaml.RequestResponse> responses
-    ) {
-        var jsonValidator = new ServicesYaml.ValidatorJson();
-        if (!responses.isEmpty()) {
-            jsonValidator.setResponse(responses);
-        }
-        if (!requests.isEmpty()) {
-            jsonValidator.setRequest(requests);
-        }
-        return jsonValidator;
-    }
-
-    private String getSchemaName(String destination, String fileName) {
-        return SCHEMA_PREFIX
-                .concat(infraConfig.sowaProfileName())
-                .concat(destination)
-                .concat(fileName);
     }
 }
