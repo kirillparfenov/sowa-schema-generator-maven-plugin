@@ -102,9 +102,9 @@ public class SowaSchemaGenerator {
      * @param method     метод контроллера
      */
     private void setRequestResponse(SowaSchema sowaSchema, RestClass restClass, RestMethod method) {
-        var endpointToSchema = pathResolver.endpointToSchema(restClass, method);
-        var request = generate(method.getRequest(), endpointToSchema.concat(REQUEST_SUFFIX));
-        var response = generate(method.getResponse(), endpointToSchema.concat(RESPONSE_SUFFIX));
+        var schemaName = pathResolver.schemaName(restClass, method);
+        var request = generate(method.getRequest(), schemaName.concat(REQUEST_SUFFIX));
+        var response = generate(method.getResponse(), schemaName.concat(RESPONSE_SUFFIX));
         sowaSchema.setRequest(request);
         sowaSchema.setResponse(response);
     }

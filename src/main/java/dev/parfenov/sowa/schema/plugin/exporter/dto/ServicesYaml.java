@@ -138,7 +138,7 @@ public class ServicesYaml {
         private String method;
         private String schema;
         @JsonProperty("allow_empty_body")
-        private boolean allowEmptyBody;
+        private boolean allowEmptyBody = true;
         @JsonProperty("response_code")
         private ResponseCode responseCode;
 
