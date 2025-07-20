@@ -88,7 +88,7 @@ public class SowaGeneratorMojo extends AbstractMojo {
         var restControllers = new ClassParser(parserConfig).parseAllRestClasses();
 
         var generator = GeneratorStrategy.getGenerator(new GeneratorConfig(extractDefinitions, stringLengthIncreasePercent));
-        var sowaSchemas = new SowaSchemaGenerator(generator, project).generateSchema(restControllers);
+        var sowaSchemas = new SowaSchemaGenerator(generator).generateSchema(restControllers);
 
         var directoriesBuilder = new DirectoriesBuilder(project);
         new SchemaExporter(new ExportConfig(directoriesBuilder, project, getLog())).export(sowaSchemas);

@@ -5,12 +5,11 @@
  */
 package dev.parfenov.sowa.schema.plugin.sowa;
 
-import dev.parfenov.sowa.schema.plugin.generator.dto.GeneratedResult;
 import dev.parfenov.sowa.schema.plugin.generator.Generator;
-import dev.parfenov.sowa.schema.plugin.parsers.EndpointPathParser;
+import dev.parfenov.sowa.schema.plugin.generator.dto.GeneratedResult;
+import dev.parfenov.sowa.schema.plugin.parsers.NameGenerator;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.RestClass;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.RestMethod;
-import org.apache.maven.project.MavenProject;
 import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Type;
@@ -25,22 +24,10 @@ import java.util.List;
  */
 public class SowaSchemaGenerator {
 
-    private static final String REQUEST_SUFFIX = "_request";
-    private static final String RESPONSE_SUFFIX = "_response";
-
     private final Generator generator;
-    private final EndpointPathParser pathResolver;
 
-    /**
-     * Создает генератор схем Sowa.
-     *
-     * @param generator    генератор JSON Schema
-     * @param mavenProject Maven проект для разрешения путей
-     */
-    public SowaSchemaGenerator(final Generator generator,
-                               final MavenProject mavenProject) {
+    public SowaSchemaGenerator(final Generator generator) {
         this.generator = generator;
-        this.pathResolver = new EndpointPathParser(mavenProject);
     }
 
     /**
@@ -99,13 +86,36 @@ public class SowaSchemaGenerator {
      *
      * @param sowaSchema схема для заполнения
      * @param restClass  REST контроллер
-     * @param method     метод контроллера
+     * @param method     REST метод
      */
     private void setRequestResponse(SowaSchema sowaSchema, RestClass restClass, RestMethod method) {
-        var schemaName = pathResolver.schemaName(restClass, method);
-        var request = generate(method.getRequest(), schemaName.concat(REQUEST_SUFFIX));
-        var response = generate(method.getResponse(), schemaName.concat(RESPONSE_SUFFIX));
+        setRequest(sowaSchema, restClass, method);
+        setResponse(sowaSchema, restClass, method);
+    }
+
+    /**
+     * Установить схему запроса {@link SowaSchema#setRequest(GeneratedResult)}
+     *
+     * @param sowaSchema схема для заполнения
+     * @param restClass  REST контроллер
+     * @param method     REST метод
+     */
+    private void setRequest(SowaSchema sowaSchema, RestClass restClass, RestMethod method) {
+        var schemaName = NameGenerator.requestSchemaName(restClass, method);
+        var request = generate(method.getRequest(), schemaName);
         sowaSchema.setRequest(request);
+    }
+
+    /**
+     * Установить схему ответа {@link SowaSchema#setResponse(GeneratedResult)}
+     *
+     * @param sowaSchema схема для заполнения
+     * @param restClass  REST контроллер
+     * @param method     REST метод
+     */
+    private void setResponse(SowaSchema sowaSchema, RestClass restClass, RestMethod method) {
+        var schemaName = NameGenerator.responseSchemaName(restClass, method);
+        var response = generate(method.getResponse(), schemaName);
         sowaSchema.setResponse(response);
     }
 

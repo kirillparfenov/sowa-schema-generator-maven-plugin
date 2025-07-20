@@ -25,11 +25,6 @@ public class EndpointPathParser {
 
     private final MavenProject mavenProject;
 
-    /**
-     * Создает парсер путей.
-     *
-     * @param mavenProject Maven проект для получения контекстного пути
-     */
     public EndpointPathParser(final MavenProject mavenProject) {
         this.mavenProject = mavenProject;
     }
@@ -64,17 +59,6 @@ public class EndpointPathParser {
      */
     public String contextPath() {
         return PropertiesParser.contextPath(mavenProject);
-    }
-
-    /**
-     * Генерирует имя схемы на основе класса и метода.
-     *
-     * @param restClass  REST контроллер
-     * @param restMethod метод контроллера
-     * @return имя схемы в формате "ClassName_methodName"
-     */
-    public String schemaName(RestClass restClass, RestMethod restMethod) {
-        return restClass.getName().concat("_").concat(restMethod.getName());
     }
 
     /**

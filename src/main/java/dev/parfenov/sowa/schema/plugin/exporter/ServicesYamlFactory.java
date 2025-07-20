@@ -72,16 +72,16 @@ public class ServicesYamlFactory {
      * Создает конфигурацию запроса/ответа с валидацией.
      *
      * @param method       HTTP метод (get, post, put, delete и т.д.)
-     * @param schema       путь к JSON схеме для валидации
+     * @param schemaPath   путь к JSON схеме для валидации
      * @param responseCode код ответа (только для ответов, null для запросов)
      * @return конфигурация запроса/ответа
      */
     public ServicesYaml.RequestResponse createRequestResponse(String method,
-                                                              String schema,
+                                                              String schemaPath,
                                                               ServicesYaml.ResponseCode responseCode) {
         var requestResponse = new ServicesYaml.RequestResponse();
         requestResponse.setMethod(method);
-        requestResponse.setSchema(schema);
+        requestResponse.setSchema(schemaPath);
         if (responseCode != null) {
             requestResponse.setResponseCode(responseCode);
         }

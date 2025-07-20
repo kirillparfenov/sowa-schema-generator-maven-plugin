@@ -9,12 +9,12 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import dev.parfenov.sowa.schema.plugin.exporter.dto.ServicesYaml;
 import dev.parfenov.sowa.schema.plugin.parsers.EndpointPathParser;
+import dev.parfenov.sowa.schema.plugin.parsers.NameGenerator;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.RestClass;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.RestMethod;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,14 +29,12 @@ public class InfraExporter {
 
     private static final String PROXY_PREFIX = "^/proxy";
     private static final String SCHEMA_PREFIX = "schemes/json/";
-    private static final String EMPTY_RESPONSE = "empty_object.json";
-    private static final String RESPONSE_SUFFIX = "_response.json";
-    private static final String REQUEST_SUFFIX = "_request.json";
+    private static final String JSON_SUFFIX = ".json";
     private static final String REQUEST_PATH = "/request/";
     private static final String RESPONSE_PATH = "/response/";
     private static final String ERROR_RESPONSE_SCHEMA = "error_response_4XX.json";
-    private static final String SUCCESS_CODE_PATTERN = "^2\\d{2}$";
-    private static final String ERROR_CODE_PATTERN = "^4\\d{2}$";
+    private static final String SUCCESS_2XX_PATTERN = "^2\\d{2}$";
+    private static final String ERROR_4XX_PATTERN = "^4\\d{2}$";
     private static final char REGEX_OPERATOR = '~';
 
     private final InfraConfig infraConfig;
@@ -94,27 +92,27 @@ public class InfraExporter {
      * @return конфигурация сервиса
      */
     private ServicesYaml createServiceYaml(RestClass restClass, RestMethod restMethod) {
-        var schemaName = getSchemaName(restClass, restMethod);
+        var schemaID = NameGenerator.schemaID(restClass, restMethod);
         var fullPath = getFullPath(restClass, restMethod);
 
         return servicesFactory.createService(
-                schemaName,
+                schemaID,
                 fullPath,
                 getAllowedQueries(restMethod),
-                createValidator(restMethod, schemaName)
+                createValidator(restClass, restMethod)
         );
     }
 
     /**
      * Создает валидатор для метода.
      *
+     * @param restClass  REST класс
      * @param restMethod REST метод
-     * @param schemaName имя схемы
      * @return конфигурация валидатора
      */
-    private ServicesYaml.Validator createValidator(RestMethod restMethod, String schemaName) {
-        var requests = createRequests(restMethod, schemaName);
-        var responses = createResponses(restMethod, schemaName);
+    private ServicesYaml.Validator createValidator(RestClass restClass, RestMethod restMethod) {
+        var requests = createRequests(restClass, restMethod);
+        var responses = createResponses(restClass, restMethod);
 
         var jsonValidator = servicesFactory.createValidatorJson(requests, responses);
         return servicesFactory.createValidator(jsonValidator);
@@ -123,13 +121,13 @@ public class InfraExporter {
     /**
      * Формирует блок request/response.
      *
+     * @param restClass  REST класс
      * @param restMethod REST метод
-     * @param schemaName имя схемы
      * @return список конфигураций запросов
      */
-    private List<ServicesYaml.RequestResponse> createRequests(RestMethod restMethod, String schemaName) {
+    private List<ServicesYaml.RequestResponse> createRequests(RestClass restClass, RestMethod restMethod) {
         return Optional
-                .ofNullable(createSuccessRequest(restMethod, schemaName))
+                .ofNullable(createSuccessRequest(restClass, restMethod))
                 .map(List::of)
                 .orElseGet(List::of);
     }
@@ -137,18 +135,16 @@ public class InfraExporter {
     /**
      * Создает блок с конфигурацией запроса
      *
+     * @param restClass  REST класс
      * @param restMethod REST метод
-     * @param schemaName имя схемы
      * @return null, либо конфигурацию с запросом
      */
-    private ServicesYaml.RequestResponse createSuccessRequest(RestMethod restMethod, String schemaName) {
+    private ServicesYaml.RequestResponse createSuccessRequest(RestClass restClass, RestMethod restMethod) {
         if (restMethod.getRequest() == null) return null;
-
-        var schemaPath = buildSchemaPath(REQUEST_PATH, schemaName + REQUEST_SUFFIX);
 
         return servicesFactory.createRequestResponse(
                 getHttpMethodName(restMethod),
-                schemaPath,
+                buildRequestPath(restClass, restMethod),
                 null
         );
     }
@@ -156,13 +152,13 @@ public class InfraExporter {
     /**
      * Создает конфигурации ответов (включая успешные и ошибочные).
      *
+     * @param restClass  REST класс
      * @param restMethod REST метод
-     * @param schemaName имя схемы
      * @return список конфигураций ответов
      */
-    private List<ServicesYaml.RequestResponse> createResponses(RestMethod restMethod, String schemaName) {
+    private List<ServicesYaml.RequestResponse> createResponses(RestClass restClass, RestMethod restMethod) {
         return Stream.of(
-                        create2xxResponse(restMethod, schemaName),
+                        create2xxResponse(restClass, restMethod),
                         create4xxResponse(restMethod)
                 )
                 .filter(Objects::nonNull)
@@ -172,17 +168,16 @@ public class InfraExporter {
     /**
      * Создает блок с конфигурацией 2XX ответа
      *
+     * @param restClass  REST класс
      * @param restMethod REST метод
-     * @param schemaName имя схемы
      * @return null, либо конфигурацию с успешным ответом
      */
-    private ServicesYaml.RequestResponse create2xxResponse(RestMethod restMethod, String schemaName) {
+    private ServicesYaml.RequestResponse create2xxResponse(RestClass restClass, RestMethod restMethod) {
         if (restMethod.getResponse() == null) return null;
 
         var httpMethod = getHttpMethodName(restMethod);
-        var fileName = buildResponseFilename(restMethod, schemaName);
-        var schemaPath = buildSchemaPath(RESPONSE_PATH, fileName);
-        var successCode = servicesFactory.createResponseCode(REGEX_OPERATOR, SUCCESS_CODE_PATTERN);
+        var schemaPath = buildResponsePath(restClass, restMethod);
+        var successCode = servicesFactory.createResponseCode(REGEX_OPERATOR, SUCCESS_2XX_PATTERN);
 
         return servicesFactory.createRequestResponse(
                 httpMethod,
@@ -200,7 +195,7 @@ public class InfraExporter {
     private ServicesYaml.RequestResponse create4xxResponse(RestMethod restMethod) {
         var httpMethod = getHttpMethodName(restMethod);
         var errorSchemaPath = buildSchemaPath(RESPONSE_PATH, ERROR_RESPONSE_SCHEMA);
-        var errorCode = servicesFactory.createResponseCode(REGEX_OPERATOR, ERROR_CODE_PATTERN);
+        var errorCode = servicesFactory.createResponseCode(REGEX_OPERATOR, ERROR_4XX_PATTERN);
 
         return servicesFactory.createRequestResponse(
                 httpMethod,
@@ -220,19 +215,6 @@ public class InfraExporter {
     }
 
     /**
-     * Проверка, что ответ метода void
-     *
-     * @param responseType тип ответа метода
-     * @return true, если ответ метода является пустым
-     */
-    private boolean isVoidResponse(Type responseType) {
-        return Optional
-                .ofNullable(responseType)
-                .map(void.class::equals)
-                .orElse(false);
-    }
-
-    /**
      * Создает список разрешенных запросов для метода.
      *
      * @param method REST метод
@@ -243,6 +225,30 @@ public class InfraExporter {
                 method.getHttpMethod().name().toLowerCase()
         );
         return List.of(allowedQuery);
+    }
+
+    /**
+     * Строит полный путь до request-схемы
+     *
+     * @param restClass  REST класс
+     * @param restMethod REST метод
+     * @return полный путь до request-схемы
+     */
+    private String buildRequestPath(RestClass restClass, RestMethod restMethod) {
+        var schemaName = NameGenerator.requestSchemaName(restClass, restMethod);
+        return buildSchemaPath(REQUEST_PATH, schemaName + JSON_SUFFIX);
+    }
+
+    /**
+     * Строит полный путь до response-схемы
+     *
+     * @param restClass  REST класс
+     * @param restMethod REST метод
+     * @return полный путь до response-схемы
+     */
+    private String buildResponsePath(RestClass restClass, RestMethod restMethod) {
+        var schemaName = NameGenerator.responseSchemaName(restClass, restMethod);
+        return buildSchemaPath(RESPONSE_PATH, schemaName + JSON_SUFFIX);
     }
 
     /**
@@ -265,32 +271,6 @@ public class InfraExporter {
      */
     private String getFullPath(RestClass restClass, RestMethod restMethod) {
         return PROXY_PREFIX + endpointPathParser.resolvePathWithVariables(restClass, restMethod);
-    }
-
-    /**
-     * Возвращает имя файла с JSON-схемой
-     *
-     * @param restClass  REST класс
-     * @param restMethod метод из REST класса
-     * @return имя файла JSON-схемы
-     */
-    private String getSchemaName(RestClass restClass, RestMethod restMethod) {
-        return isVoidResponse(restMethod.getResponse())
-                ? EMPTY_RESPONSE
-                : endpointPathParser.schemaName(restClass, restMethod);
-    }
-
-    /**
-     * Строит имя response - схемы
-     *
-     * @param restMethod метод контроллера
-     * @param schemaName имя схемы
-     * @return имя файла response - схемы, либо empty_object.json при response == void
-     */
-    private String buildResponseFilename(RestMethod restMethod, String schemaName) {
-        return isVoidResponse(restMethod.getResponse())
-                ? schemaName
-                : schemaName + RESPONSE_SUFFIX;
     }
 
     /**

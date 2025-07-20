@@ -28,7 +28,7 @@ import static dev.parfenov.sowa.schema.plugin.generator.ValidationConstants.ARRA
  * <p>
  * Основные возможности:
  * <ul>
- *   <li>Поддержка аннотаций @Schema и @ArraySchema</li>
+ *   <li>Поддержка аннотаций @Schema</li>
  *   <li>Настраиваемое увеличение длины строк</li>
  *   <li>Автоматические ограничения для типов (UUID, числа)</li>
  *   <li>Определение максимальных размеров массивов</li>
@@ -64,6 +64,7 @@ public class CustomJakartaValidationModule extends JakartaValidationModule {
         configPart.withArrayMaxItemsResolver(this::resolveArrayMaxItems);
         configPart.withNumberInclusiveMaximumResolver(this::resolveTypeMaximum);
         configPart.withCustomDefinitionProvider(new CustomObjectDefinitionProvider());
+        configPart.withCustomDefinitionProvider(new CustomVoidDefinitionProvider());
         configPart.withDescriptionResolver(this.createTypePropertyResolver(Schema::description, description -> !description.isBlank()));
         configPart.withTypeAttributeOverride(new CustomTypeAttributeOverride());
     }
