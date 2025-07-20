@@ -8,6 +8,7 @@ package dev.parfenov.sowa.schema.plugin.parsers;
 import com.fasterxml.classmate.*;
 
 import java.lang.reflect.Type;
+import java.util.Optional;
 
 /**
  * Парсер для работы с Java типами и их метаданными.
@@ -42,5 +43,31 @@ public class TypesParser {
                 new AnnotationConfiguration.StdConfiguration(AnnotationInclusion.INCLUDE_AND_INHERIT_IF_INHERITED),
                 null
         );
+    }
+
+    /**
+     * Проверяет является ли переданный тип {@link Void}
+     *
+     * @param javaType resolved - тип Java
+     * @return true, если {@code javaType} == {@link Void}
+     */
+    public static boolean isVoid(ResolvedType javaType) {
+        return isVoid(javaType.getErasedType());
+    }
+
+    /**
+     * Проверяет является ли переданный тип {@link Void}
+     *
+     * @param javaType тип Java
+     * @return <ul>
+     *     <li>true, если {@code javaType == void}</li>
+     *     <li>false, если {@code javaType == null}, либо {@code javaType != void}</li>
+     * </ul>
+     */
+    public static boolean isVoid(Type javaType) {
+        return Optional
+                .ofNullable(javaType)
+                .map(type -> type.equals(void.class) || type.equals(Void.class))
+                .orElse(false);
     }
 }
