@@ -53,18 +53,6 @@ Maven плагин для автоматической генерации JSON �
 mvn compile
 ```
 
-### Ручной запуск
-
-```bash
-mvn sowa-schema-generator:generateSchema
-```
-
-### Генерация только для измененных файлов
-
-```bash
-mvn sowa-schema-generator:generateSchema -DonlyGitDiff=true
-```
-
 ## Параметры конфигурации
 
 | Параметр | Описание | Тип | Обязательный | Значение по умолчанию | Возможные значения |
