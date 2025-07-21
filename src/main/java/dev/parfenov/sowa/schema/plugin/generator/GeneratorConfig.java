@@ -6,7 +6,6 @@
 package dev.parfenov.sowa.schema.plugin.generator;
 
 import com.github.victools.jsonschema.generator.*;
-import com.github.victools.jsonschema.module.jackson.JacksonModule;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationOption;
 
 /**
@@ -30,7 +29,6 @@ public class GeneratorConfig {
         this.extractDefinitions = extractDefinitions;
 
         var configBuilder = new SchemaGeneratorConfigBuilder(SchemaVersion.DRAFT_7, OptionPreset.PLAIN_JSON)
-                .with(new JacksonModule())
                 .with(Option.SCHEMA_VERSION_INDICATOR)
                 .with(Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT)
                 .with(Option.NULLABLE_ARRAY_ITEMS_ALLOWED)
@@ -45,6 +43,8 @@ public class GeneratorConfig {
                 /// если не передать JakartaValidationOption.INCLUDE_PATTERN_EXPRESSIONS - не будет учитываться аннотация @Pattern
                 /// и даже не передастся String resolveStringPattern(MemberScope<?, ?> member) в  SchemaGeneratorConfigPart<?>.withStringPatternResolver
                 .with(new CustomJakartaValidationModule(stringLengthIncreasePercent, JakartaValidationOption.INCLUDE_PATTERN_EXPRESSIONS));
+
+        configBuilder.with(new CustomJacksonModule(configBuilder.getObjectMapper()));
 
         if (extractDefinitions) {
             configBuilder.with(Option.DEFINITION_FOR_MAIN_SCHEMA);

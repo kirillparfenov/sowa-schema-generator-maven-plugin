@@ -8,6 +8,7 @@ package dev.parfenov.sowa.schema.plugin.generator;
 import com.github.victools.jsonschema.generator.*;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationModule;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationOption;
+import dev.parfenov.sowa.schema.plugin.parsers.TypesParser;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
@@ -103,10 +104,9 @@ public class CustomJakartaValidationModule extends JakartaValidationModule {
 
     @Override
     protected Boolean isNullable(MemberScope<?, ?> member) {
-        return super.isNullable(member);
-//        return Optional
-//                .ofNullable(super.isNullable(member))
-//                .orElseGet(() -> checkNullable(member)); //вернуть, если потребуется
+        return Optional
+                .ofNullable(super.isNullable(member))
+                .orElseGet(() -> TypesParser.isPrimitive(member) ? true : null);
     }
 
     /**
