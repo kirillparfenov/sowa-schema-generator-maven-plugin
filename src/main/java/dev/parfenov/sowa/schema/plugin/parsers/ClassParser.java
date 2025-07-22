@@ -7,6 +7,7 @@ package dev.parfenov.sowa.schema.plugin.parsers;
 
 import dev.parfenov.sowa.schema.plugin.classloader.ClassLoader;
 import dev.parfenov.sowa.schema.plugin.git.GitDiffParser;
+import dev.parfenov.sowa.schema.plugin.git.GraphBuilder;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.RestClass;
 import io.github.classgraph.ClassInfo;
 import org.springframework.stereotype.Controller;
@@ -56,13 +57,14 @@ public class ClassParser {
                     .stream()
                     .toList();
 
+            var graphBuilder = new GraphBuilder(scanResult);
 
             var result = restControllers.stream()
-                    .map(this::parseRestController)
+                    .map(classInfo -> parseRestController(classInfo, graphBuilder))
                     .toList();
 
             if (config.onlyGitDiff()) {
-                new GitDiffParser(config.branchDiffWith(), scanResult, restControllers).diffMethods(result);
+                new GitDiffParser(config.branchDiffWith()).diffMethods(result);
             }
 
             return result;
@@ -93,8 +95,8 @@ public class ClassParser {
      * @param restController информация о классе контроллера
      * @return объект REST класса с методами
      */
-    public RestClass parseRestController(ClassInfo restController) {
-        var builder = new RestClassBuilder(endpointPathParser, typesParser)
+    public RestClass parseRestController(ClassInfo restController, GraphBuilder graphBuilder) {
+        var builder = new RestClassBuilder(endpointPathParser, config.onlyGitDiff(), graphBuilder)
                 .withName(restController.getSimpleName())
                 .withMainClass(restController);
 
