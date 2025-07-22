@@ -50,15 +50,19 @@ public class ClassParser {
      */
     public List<RestClass> parseAllRestClasses() {
         try (var scanResult = classLoader.getClassgraph().scan()) {
-            var result = scanResult
+            var restControllers = scanResult
                     .getClassesWithAnyAnnotation(RestController.class, Controller.class)
                     .filter(this::isProjectPackage)
                     .stream()
+                    .toList();
+
+
+            var result = restControllers.stream()
                     .map(this::parseRestController)
                     .toList();
 
             if (config.onlyGitDiff()) {
-                new GitDiffParser(config.branchDiffWith(), scanResult, config.projectBasePackage()).setNullForNoDiff(result);
+                new GitDiffParser(config.branchDiffWith(), scanResult, restControllers).diffMethods(result);
             }
 
             return result;

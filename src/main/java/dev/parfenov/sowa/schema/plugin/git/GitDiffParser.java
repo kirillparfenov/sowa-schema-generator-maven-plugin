@@ -5,11 +5,10 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import dev.parfenov.sowa.schema.plugin.parsers.TypesParser;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.RestClass;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.RestMethod;
-import io.github.classgraph.ClassInfo;
-import io.github.classgraph.ClassRefTypeSignature;
-import io.github.classgraph.ScanResult;
+import io.github.classgraph.*;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
@@ -36,18 +35,12 @@ public class GitDiffParser {
     private final Git git;
     private final TypesParser typesParser = new TypesParser();
     private final ScanResult scanResult;
-    private final String basePackage;
+    private final List<ClassInfo> restControllers;
 
-    /**
-     * Создает парсер git diff.
-     *
-     * @param branchDiffWith ветка для сравнения (например, "origin/develop")
-     * @param scanResult     результат построения графа классов
-     */
-    public GitDiffParser(final String branchDiffWith, final ScanResult scanResult, final String basePackage) {
+    public GitDiffParser(final String branchDiffWith, final ScanResult scanResult, final List<ClassInfo> restControllers) {
         this.git = new Git(branchDiffWith);
         this.scanResult = scanResult;
-        this.basePackage = basePackage;
+        this.restControllers = restControllers;
     }
 
     /**
@@ -58,13 +51,15 @@ public class GitDiffParser {
      *
      * @param parsedClasses список проанализированных REST классов
      */
-    public void setNullForNoDiff(List<RestClass> parsedClasses) {
+    public void diffMethods(List<RestClass> parsedClasses) {
         if (CollectionUtils.isEmpty(parsedClasses)) {
             return;
         }
 
         var sourceDependencies = buildDependencyMap();
-        System.out.println("DEPENDENCIES: " + sourceDependencies);
+        for (var dep : sourceDependencies.entrySet()) {
+            System.out.println("DEPENDENCY: " + dep);
+        }
 
         for (var restClass : parsedClasses) {
             processRestClassMethods(restClass, sourceDependencies);
@@ -77,34 +72,86 @@ public class GitDiffParser {
      * @return карта где ключ - файл, значение - множество зависимых файлов
      */
     private Map<String, Set<String>> buildDependencyMap() {
-        return scanResult.getClassDependencyMap()
-                .keySet()
+        return sourceFileDependencies()
                 .stream()
+                .flatMap(dependencies -> dependencies.entrySet().stream())
                 .collect(Collectors.toMap(
-                        ClassInfo::getSourceFile,
-                        this::handleDependenciesSourceFiles,
-                        this::mergeDependencySets
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        this::mergeDependencies
                 ));
     }
 
-    private Set<String> handleDependenciesSourceFiles(ClassInfo classInfo) {
-        return Stream.concat(
-                handleReferencedClasses(classInfo).stream(),
-                handleFields(classInfo).stream()
-        ).collect(Collectors.toSet());
+    private List<Map<String, Set<String>>> sourceFileDependencies() {
+        var foundDependencies = new ArrayList<Map<String, Set<String>>>();
+        for (var restController : restControllers) {
+            for (var method : restController.getMethodInfo()) {
+                foundDependencies.add(responseDependencies(method));
+                foundDependencies.add(requestDependencies(method));
+            }
+        }
+        return foundDependencies;
     }
 
-    private  Set<String> handleReferencedClasses(ClassInfo classInfo) {
+    private Map<String, Set<String>> responseDependencies(MethodInfo method) {
+        if (method.getTypeSignatureOrTypeDescriptor().getResultType() instanceof ClassRefTypeSignature ref) {
+            return getTypeDependencies(ref);
+        }
+        return Map.of();
+    }
+
+    private Map<String, Set<String>> requestDependencies(MethodInfo method) {
+        for (var param : method.getParameterInfo()) {
+            if (param.hasAnnotation(RequestBody.class)) {
+                if (param.getTypeSignatureOrTypeDescriptor() instanceof ClassRefTypeSignature ref) {
+                    return getTypeDependencies(ref);
+                }
+            }
+        }
+        return Map.of();
+    }
+
+    private Map<String, Set<String>> getTypeDependencies(ClassRefTypeSignature ref) {
+        return Optional
+                .ofNullable(ref.getClassInfo().getSourceFile())
+                .map(sourceFileName -> Map.of(sourceFileName, loadSourceFileDependencies((ref))))
+                .orElseGet(Map::of);
+    }
+
+    private Set<String> loadSourceFileDependencies(ClassRefTypeSignature ref) {
+        return Stream.of(
+                        handleReferencedClasses(ref.getClassInfo()),
+                        handleFields(ref.getClassInfo()),
+                        handleSubTypes(ref.getClassInfo()),
+                        responseDependencies(ref)
+                ).flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+    }
+
+    private Set<String> responseDependencies(ClassRefTypeSignature ref) {
+        var responseSourceFile = new HashSet<String>();
+        collectSourceFiles(ref, responseSourceFile);
+
+        var refSourceFile = ref.getClassInfo().getSourceFile();
+        responseSourceFile.removeIf(sourceFileName -> sourceFileName.equals(refSourceFile));
+
+        return responseSourceFile;
+    }
+
+
+    private Set<String> handleReferencedClasses(ClassInfo classInfo) {
         Set<String> referenced = new HashSet<>();
         var field = ReflectionUtils.findField(classInfo.getClass(), "referencedClassNames");
         if (field != null && field.getType().isAssignableFrom(Set.class)) {
             ReflectionUtils.makeAccessible(field);
-            var referencedClassNames = (Set<String>)ReflectionUtils.getField(field, classInfo);
-            referencedClassNames
+            var referencedClassNames = (Set<String>) ReflectionUtils.getField(field, classInfo);
+            Optional.ofNullable(referencedClassNames)
+                    .orElseGet(Set::of)
                     .stream()
-                    .filter(ref -> ref.startsWith(basePackage))
                     .filter(ref -> !ref.equals(classInfo.getName()))
-                    .map(ref -> scanResult.getClassInfo(ref).getSourceFile())
+                    .map(scanResult::getClassInfo)
+                    .filter(ref -> !ref.isAnnotation())
+                    .map(ClassInfo::getSourceFile)
                     .filter(Objects::nonNull)
                     .forEach(referenced::add);
         }
@@ -112,26 +159,37 @@ public class GitDiffParser {
     }
 
     private Set<String> handleFields(ClassInfo classInfo) {
-        var subTypesFieldsSourceFiles = classInfo.getFieldInfo()
-                .stream()
-                //todo нужно обработать subType над самим классом
-                .map(e -> handleSubTypesSourceFiles(e.loadClassAndGetField()))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toSet());
-
-        var fields = classInfo.getFieldInfo();
         var sourceFileFields = new HashSet<String>();
-        for (var field : fields) {
+        for (var field : classInfo.getFieldInfo()) {
             if (field.getTypeSignatureOrTypeDescriptor() instanceof ClassRefTypeSignature ref) {
                 collectSourceFiles(ref, sourceFileFields);
             }
         }
 
         var rootSourceFile = classInfo.getSourceFile();
-        sourceFileFields.removeIf(f -> f.equals(rootSourceFile));
-        sourceFileFields.addAll(subTypesFieldsSourceFiles);
+        sourceFileFields.removeIf(sourceFileName -> sourceFileName.equals(rootSourceFile));
 
         return sourceFileFields;
+    }
+
+    private Set<String> handleSubTypes(ClassInfo classInfo) {
+        return Stream.of(
+                        handleClassSubTypes(classInfo),
+                        handleFieldSubTypes(classInfo.getFieldInfo())
+                )
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+    }
+
+    private Set<String> handleClassSubTypes(ClassInfo classInfo) {
+        return handleSubTypesSourceFiles(classInfo.loadClass());
+    }
+
+    private Set<String> handleFieldSubTypes(FieldInfoList fields) {
+        return fields.stream()
+                .map(e -> handleSubTypesSourceFiles(e.loadClassAndGetField()))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
     }
 
     private Set<String> handleSubTypesSourceFiles(AnnotatedElement annotatedElement) {
@@ -153,6 +211,7 @@ public class GitDiffParser {
         if (sourceFile != null && !sourceFile.isBlank()) {
             sourceFiles.add(sourceFile);
         }
+
         for (var typeArgument : ref.getTypeArguments()) {
             if (typeArgument.getTypeSignature() instanceof ClassRefTypeSignature signature) {
                 collectSourceFiles(signature, sourceFiles);
@@ -163,7 +222,7 @@ public class GitDiffParser {
     /**
      * Объединяет множества зависимостей при коллизии ключей.
      */
-    private Set<String> mergeDependencySets(Set<String> before, Set<String> current) {
+    private Set<String> mergeDependencies(Set<String> before, Set<String> current) {
         var merged = new HashSet<>(before);
         merged.addAll(current);
         return merged;
