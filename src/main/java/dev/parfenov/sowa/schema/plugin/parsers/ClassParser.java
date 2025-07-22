@@ -58,7 +58,7 @@ public class ClassParser {
                     .toList();
 
             if (config.onlyGitDiff()) {
-                new GitDiffParser(config.branchDiffWith(), scanResult).setNullForNoDiff(result);
+                new GitDiffParser(config.branchDiffWith(), scanResult, config.projectBasePackage()).setNullForNoDiff(result);
             }
 
             return result;

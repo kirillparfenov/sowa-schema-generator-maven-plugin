@@ -1,16 +1,21 @@
 package dev.parfenov.sowa.schema.plugin.git;
 
 import com.fasterxml.classmate.ResolvedType;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 import dev.parfenov.sowa.schema.plugin.parsers.TypesParser;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.RestClass;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.RestMethod;
 import io.github.classgraph.ClassInfo;
+import io.github.classgraph.ClassRefTypeSignature;
 import io.github.classgraph.ScanResult;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ReflectionUtils;
 
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Парсер git diff для определения необходимости генерации схем.
@@ -31,6 +36,7 @@ public class GitDiffParser {
     private final Git git;
     private final TypesParser typesParser = new TypesParser();
     private final ScanResult scanResult;
+    private final String basePackage;
 
     /**
      * Создает парсер git diff.
@@ -38,9 +44,10 @@ public class GitDiffParser {
      * @param branchDiffWith ветка для сравнения (например, "origin/develop")
      * @param scanResult     результат построения графа классов
      */
-    public GitDiffParser(final String branchDiffWith, final ScanResult scanResult) {
+    public GitDiffParser(final String branchDiffWith, final ScanResult scanResult, final String basePackage) {
         this.git = new Git(branchDiffWith);
         this.scanResult = scanResult;
+        this.basePackage = basePackage;
     }
 
     /**
@@ -57,6 +64,7 @@ public class GitDiffParser {
         }
 
         var sourceDependencies = buildDependencyMap();
+        System.out.println("DEPENDENCIES: " + sourceDependencies);
 
         for (var restClass : parsedClasses) {
             processRestClassMethods(restClass, sourceDependencies);
@@ -70,15 +78,86 @@ public class GitDiffParser {
      */
     private Map<String, Set<String>> buildDependencyMap() {
         return scanResult.getClassDependencyMap()
-                .entrySet()
+                .keySet()
                 .stream()
                 .collect(Collectors.toMap(
-                        entry -> entry.getKey().getSourceFile(),
-                        entry -> entry.getValue().stream()
-                                .map(ClassInfo::getSourceFile)
-                                .collect(Collectors.toSet()),
+                        ClassInfo::getSourceFile,
+                        this::handleDependenciesSourceFiles,
                         this::mergeDependencySets
                 ));
+    }
+
+    private Set<String> handleDependenciesSourceFiles(ClassInfo classInfo) {
+        return Stream.concat(
+                handleReferencedClasses(classInfo).stream(),
+                handleFields(classInfo).stream()
+        ).collect(Collectors.toSet());
+    }
+
+    private  Set<String> handleReferencedClasses(ClassInfo classInfo) {
+        Set<String> referenced = new HashSet<>();
+        var field = ReflectionUtils.findField(classInfo.getClass(), "referencedClassNames");
+        if (field != null && field.getType().isAssignableFrom(Set.class)) {
+            ReflectionUtils.makeAccessible(field);
+            var referencedClassNames = (Set<String>)ReflectionUtils.getField(field, classInfo);
+            referencedClassNames
+                    .stream()
+                    .filter(ref -> ref.startsWith(basePackage))
+                    .filter(ref -> !ref.equals(classInfo.getName()))
+                    .map(ref -> scanResult.getClassInfo(ref).getSourceFile())
+                    .filter(Objects::nonNull)
+                    .forEach(referenced::add);
+        }
+        return referenced;
+    }
+
+    private Set<String> handleFields(ClassInfo classInfo) {
+        var subTypesFieldsSourceFiles = classInfo.getFieldInfo()
+                .stream()
+                //todo нужно обработать subType над самим классом
+                .map(e -> handleSubTypesSourceFiles(e.loadClassAndGetField()))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+
+        var fields = classInfo.getFieldInfo();
+        var sourceFileFields = new HashSet<String>();
+        for (var field : fields) {
+            if (field.getTypeSignatureOrTypeDescriptor() instanceof ClassRefTypeSignature ref) {
+                collectSourceFiles(ref, sourceFileFields);
+            }
+        }
+
+        var rootSourceFile = classInfo.getSourceFile();
+        sourceFileFields.removeIf(f -> f.equals(rootSourceFile));
+        sourceFileFields.addAll(subTypesFieldsSourceFiles);
+
+        return sourceFileFields;
+    }
+
+    private Set<String> handleSubTypesSourceFiles(AnnotatedElement annotatedElement) {
+        var subTypes = annotatedElement.getAnnotation(JsonSubTypes.class);
+        Set<String> sourceFiles = new HashSet<>();
+        if (subTypes != null) {
+            for (var subType : subTypes.value()) {
+                if (subType.annotationType().isAssignableFrom(JsonSubTypes.Type.class)) {
+                    var sourceFile = scanResult.getClassInfo(subType.value().getName()).getSourceFile();
+                    sourceFiles.add(sourceFile);
+                }
+            }
+        }
+        return sourceFiles;
+    }
+
+    private void collectSourceFiles(ClassRefTypeSignature ref, Set<String> sourceFiles) {
+        var sourceFile = ref.getClassInfo().getSourceFile();
+        if (sourceFile != null && !sourceFile.isBlank()) {
+            sourceFiles.add(sourceFile);
+        }
+        for (var typeArgument : ref.getTypeArguments()) {
+            if (typeArgument.getTypeSignature() instanceof ClassRefTypeSignature signature) {
+                collectSourceFiles(signature, sourceFiles);
+            }
+        }
     }
 
     /**
