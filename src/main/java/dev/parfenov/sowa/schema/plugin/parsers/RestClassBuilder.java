@@ -5,14 +5,15 @@
  */
 package dev.parfenov.sowa.schema.plugin.parsers;
 
+import dev.parfenov.sowa.schema.plugin.git.GraphBuilder;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.RestClass;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.RestMethod;
 import io.github.classgraph.ClassInfo;
+import io.github.classgraph.MethodInfo;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -31,7 +32,8 @@ public class RestClassBuilder {
     private final List<RestMethod> restMethods = new ArrayList<>();
     private final Set<String> restMethodNames = new HashSet<>();
     private final EndpointPathParser endpointPathParser;
-    private final TypesParser typesParser;
+    private final boolean onlyGitDiff;
+    private final GraphBuilder graphBuilder;
 
     /**
      * Конструктор builder'а.
@@ -39,10 +41,13 @@ public class RestClassBuilder {
      * @param endpointPathParser парсер путей эндпоинтов
      * @param typesParser        парсер типов
      */
-    public RestClassBuilder(EndpointPathParser endpointPathParser, TypesParser typesParser) {
+    public RestClassBuilder(final EndpointPathParser endpointPathParser,
+                            final boolean onlyGitDiff,
+                            final GraphBuilder graphBuilder) {
         this.restClass = new RestClass();
         this.endpointPathParser = endpointPathParser;
-        this.typesParser = typesParser;
+        this.onlyGitDiff = onlyGitDiff;
+        this.graphBuilder = graphBuilder;
     }
 
     /**
@@ -116,13 +121,12 @@ public class RestClassBuilder {
      * @param classInfo информация о классе
      */
     private void extractClassMethods(ClassInfo classInfo) {
-        var resolvedClass = typesParser.resolveErasedType(classInfo.loadClass());
-        var classMembers = typesParser.resolveTypeMembers(resolvedClass);
+        //todo нужно уйти от typeResolver и работать с ClassInfo
 
-        for (var method : classMembers.getMemberMethods()) {
-            var requestMapping = AnnotationParser.directOnMethodOrAnnotations(RequestMapping.class, method.getRawMember());
+        for (var method : classInfo.getMethodInfo()) {
+            var requestMapping = method.getAnnotationInfo(RequestMapping.class);
             if (requestMapping != null) {
-                var restMethod = buildRestMethod(method.getRawMember(), new RestMethod());
+                var restMethod = buildRestMethod(method, new RestMethod());
                 restMethods.add(restMethod);
                 restMethodNames.add(restMethod.getName());
             }
@@ -132,32 +136,33 @@ public class RestClassBuilder {
     /**
      * Строит объект REST метода из Java метода.
      *
-     * @param realMethod  Java метод (рефлексия)
+     * @param methodInfo  метод classGraph {@link MethodInfo}
      * @param builtMethod метод мы строим
      * @return построенный REST метод
      */
-    private RestMethod buildRestMethod(Method realMethod, RestMethod builtMethod) {
-        return new RestMethodBuilder(realMethod, builtMethod, endpointPathParser)
-                .withName(createUniqueMethodName(realMethod))
+    private RestMethod buildRestMethod(MethodInfo methodInfo, RestMethod builtMethod) {
+        return new RestMethodBuilder(methodInfo, builtMethod, endpointPathParser, onlyGitDiff, graphBuilder)
+                .withName(createUniqueMethodName(methodInfo))
                 .withPathVariables()
                 .withRequest()
                 .withResponse()
                 .withEndpointPath()
                 .withHttpMethod()
+                .withDependencies()
                 .build();
     }
 
     /**
      * Создает уникальное имя метода с MD5 хешем.
      *
-     * @param method метод для обработки
+     * @param methodInfo метод для обработки
      * @return уникальное имя метода
      */
-    private String createUniqueMethodName(Method method) {
-        var methodName = method.getName();
+    private String createUniqueMethodName(MethodInfo methodInfo) {
+        var methodName = methodInfo.getName();
         if (!restMethodNames.contains(methodName)) return methodName;
 
-        var bytes = method.toString().getBytes(StandardCharsets.UTF_8);
+        var bytes = methodInfo.toString().getBytes(StandardCharsets.UTF_8);
         var hash = DigestUtils.md5DigestAsHex(bytes).substring(0, 4);
         return methodName + "_" + hash;
     }

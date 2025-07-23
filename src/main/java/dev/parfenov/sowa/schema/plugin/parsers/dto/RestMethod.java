@@ -5,6 +5,7 @@
  */
 package dev.parfenov.sowa.schema.plugin.parsers.dto;
 
+import dev.parfenov.sowa.schema.plugin.git.Dependencies;
 import org.springframework.http.HttpMethod;
 
 import java.lang.reflect.Type;
@@ -36,6 +37,11 @@ public class RestMethod {
      * Тип тела ответа (возвращаемый тип метода)
      */
     private Type response;
+
+    /**
+     * Зависимости source files для request/response
+     */
+    private Dependencies dependencies;
 
     /**
      * HTTP-метод (GET, POST, PUT, DELETE, etc.)
@@ -81,6 +87,14 @@ public class RestMethod {
         this.response = response;
     }
 
+    public Dependencies getDependencies() {
+        return dependencies;
+    }
+
+    public void setDependencies(Dependencies dependencies) {
+        this.dependencies = dependencies;
+    }
+
     public HttpMethod getHttpMethod() {
         return httpMethod;
     }
@@ -95,17 +109,5 @@ public class RestMethod {
 
     public void setPathVariables(List<PathVariableInfo> pathVariables) {
         this.pathVariables = pathVariables;
-    }
-
-    @Override
-    public String toString() {
-        return "RestClassMethod{" +
-                "\nname='" + name + '\'' +
-                ",\nendpointPath='" + endpointPath + '\'' +
-                ",\nrequest=" + request +
-                ",\nresponse=" + response +
-                ",\nhttpMethod=" + httpMethod +
-                ",\npathVariables=" + pathVariables +
-                "\n}";
     }
 }
