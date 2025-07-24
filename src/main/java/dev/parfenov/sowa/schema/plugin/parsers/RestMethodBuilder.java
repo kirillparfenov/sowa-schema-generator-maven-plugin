@@ -5,15 +5,17 @@
  */
 package dev.parfenov.sowa.schema.plugin.parsers;
 
-import dev.parfenov.sowa.schema.plugin.git.GraphBuilder;
-import dev.parfenov.sowa.schema.plugin.parsers.dto.RestMethod;
+import dev.parfenov.sowa.schema.plugin.git.DependencySearcher;
+import dev.parfenov.sowa.schema.plugin.parsers.dto.Entity;
+import dev.parfenov.sowa.schema.plugin.parsers.dto.MethodModel;
 import io.github.classgraph.MethodInfo;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Builder для создания объектов RestClassMethod.
@@ -23,30 +25,23 @@ import java.util.Optional;
  */
 public class RestMethodBuilder {
     private final MethodInfo method;
-    private final Method rawMethod; //todo посмотреть - мб полностью заменить rawMethod на method
-    private final RestMethod restMethod;
+    private final Method rawMethod;
+    private final MethodModel methodModel;
     private final EndpointPathParser endpointPathParser;
     private final boolean onlyGitDiff;
-    private final GraphBuilder graphBuilder;
+    private final DependencySearcher dependencySearcher;
 
-    /**
-     * Конструктор builder'а.
-     *
-     * @param methodInfo         Java метод для анализа
-     * @param existing           существующий объект RestClassMethod или null
-     * @param endpointPathParser парсер путей эндпоинтов
-     */
     public RestMethodBuilder(final MethodInfo methodInfo,
-                             final RestMethod existing,
+                             final MethodModel existing,
                              final EndpointPathParser endpointPathParser,
                              final boolean onlyGitDiff,
-                             final GraphBuilder graphBuilder) {
+                             final DependencySearcher dependencySearcher) {
         this.method = methodInfo;
         this.rawMethod = methodInfo.loadClassAndGetMethod();
-        this.restMethod = Optional.ofNullable(existing).orElseGet(RestMethod::new);
+        this.methodModel = Optional.ofNullable(existing).orElseGet(MethodModel::new);
         this.endpointPathParser = endpointPathParser;
         this.onlyGitDiff = onlyGitDiff;
-        this.graphBuilder = graphBuilder;
+        this.dependencySearcher = dependencySearcher;
     }
 
     /**
@@ -56,7 +51,7 @@ public class RestMethodBuilder {
      * @return builder для цепочки вызовов
      */
     public RestMethodBuilder withName(String uniqueMethodName) {
-        restMethod.setName(uniqueMethodName);
+        methodModel.setName(uniqueMethodName);
         return this;
     }
 
@@ -66,9 +61,9 @@ public class RestMethodBuilder {
      * @return builder для цепочки вызовов
      */
     public RestMethodBuilder withPathVariables() {
-        if (CollectionUtils.isEmpty(restMethod.getPathVariables())) {
+        if (CollectionUtils.isEmpty(methodModel.getPathVariables())) {
             var pathVariables = MethodExtractor.extractPathVariables(rawMethod);
-            restMethod.setPathVariables(pathVariables);
+            methodModel.setPathVariables(pathVariables);
         }
         return this;
     }
@@ -79,9 +74,7 @@ public class RestMethodBuilder {
      * @return builder для цепочки вызовов
      */
     public RestMethodBuilder withRequest() {
-        if (restMethod.getRequest() == null) {
-            restMethod.setRequest(MethodExtractor.extractRequest(rawMethod));
-        }
+        methodModel.setRequest(withEntity(MethodExtractor.extractRequest(rawMethod)));
         return this;
     }
 
@@ -91,10 +84,20 @@ public class RestMethodBuilder {
      * @return builder для цепочки вызовов
      */
     public RestMethodBuilder withResponse() {
-        if (restMethod.getResponse() == null) {
-            restMethod.setResponse(MethodExtractor.extractResponse(rawMethod));
-        }
+        methodModel.setResponse(withEntity(MethodExtractor.extractResponse(rawMethod)));
         return this;
+    }
+
+    /**
+     * Создает {@link Entity} и устанавливает тип
+     *
+     * @param type тип
+     * @return {@link Entity}
+     */
+    private Entity withEntity(Type type) {
+        var entity = new Entity();
+        entity.setType(type);
+        return entity;
     }
 
     /**
@@ -103,9 +106,9 @@ public class RestMethodBuilder {
      * @return builder для цепочки вызовов
      */
     public RestMethodBuilder withEndpointPath() {
-        if (!StringUtils.hasText(restMethod.getEndpointPath())) {
-            var endpointPath = endpointPathParser.pathOnMethod(rawMethod);
-            restMethod.setEndpointPath(endpointPath);
+        if (!StringUtils.hasText(methodModel.getEndpointPath())) {
+            var endpointPath = endpointPathParser.getEndpointPath(method);
+            methodModel.setEndpointPath(endpointPath);
         }
         return this;
     }
@@ -116,11 +119,10 @@ public class RestMethodBuilder {
      * @return builder для цепочки вызовов
      */
     public RestMethodBuilder withHttpMethod() {
-        if (restMethod.getHttpMethod() == null) {
-            var requestMapping = AnnotationParser.directOnMethodOrAnnotations(RequestMapping.class, rawMethod);
-            if (requestMapping != null && requestMapping.method().length > 0) {
-                restMethod.setHttpMethod(requestMapping.method()[0].asHttpMethod());
-            }
+        if (methodModel.getHttpMethod() == null) {
+            AnnotationParser
+                    .getHttpMethod(method)
+                    .ifPresent(methodModel::setHttpMethod);
         }
         return this;
     }
@@ -132,18 +134,34 @@ public class RestMethodBuilder {
      */
     public RestMethodBuilder withDependencies() {
         if (onlyGitDiff) {
-            var dependencies = graphBuilder.buildGraphModels(method);
-            restMethod.setDependencies(dependencies);
+            var dependencies = dependencySearcher.searchDependencies(method);
+            setDependencies(methodModel.getRequest(), dependencies.getRequest());
+            setDependencies(methodModel.getResponse(), dependencies.getResponse());
         }
         return this;
     }
 
+    private void setDependencies(Entity entity, Set<String> dependencies) {
+        entity.setDependencies(dependencies);
+    }
+
     /**
-     * Возвращает построенный объект REST метода.
+     * Устанавливает {@link Void} для нулевого {@link Entity#getType()}
+     * и возвращает построенный объект REST метода.
      *
      * @return готовый объект RestClassMethod
      */
-    public RestMethod build() {
-        return restMethod;
+    public MethodModel build() {
+        nullableTypeToVoid(methodModel.getRequest());
+        return methodModel;
+    }
+
+    /**
+     * Установка {@link Void} для нулевого {@link Entity#getType()}
+     */
+    private void nullableTypeToVoid(Entity entity) {
+        if (entity.getType() == null) {
+            entity.setType(Void.class);
+        }
     }
 } 

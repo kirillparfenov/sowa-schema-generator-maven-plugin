@@ -5,9 +5,9 @@
  */
 package dev.parfenov.sowa.schema.plugin.parsers;
 
-import dev.parfenov.sowa.schema.plugin.git.GraphBuilder;
-import dev.parfenov.sowa.schema.plugin.parsers.dto.RestClass;
-import dev.parfenov.sowa.schema.plugin.parsers.dto.RestMethod;
+import dev.parfenov.sowa.schema.plugin.git.DependencySearcher;
+import dev.parfenov.sowa.schema.plugin.parsers.dto.ClassModel;
+import dev.parfenov.sowa.schema.plugin.parsers.dto.MethodModel;
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.MethodInfo;
 import org.springframework.util.DigestUtils;
@@ -28,26 +28,20 @@ import java.util.Set;
  */
 public class RestClassBuilder {
 
-    private final RestClass restClass;
-    private final List<RestMethod> restMethods = new ArrayList<>();
+    private final ClassModel classModel;
+    private final List<MethodModel> methodModels = new ArrayList<>();
     private final Set<String> restMethodNames = new HashSet<>();
     private final EndpointPathParser endpointPathParser;
     private final boolean onlyGitDiff;
-    private final GraphBuilder graphBuilder;
+    private final DependencySearcher dependencySearcher;
 
-    /**
-     * Конструктор builder'а.
-     *
-     * @param endpointPathParser парсер путей эндпоинтов
-     * @param typesParser        парсер типов
-     */
     public RestClassBuilder(final EndpointPathParser endpointPathParser,
                             final boolean onlyGitDiff,
-                            final GraphBuilder graphBuilder) {
-        this.restClass = new RestClass();
+                            final DependencySearcher dependencySearcher) {
+        this.classModel = new ClassModel();
         this.endpointPathParser = endpointPathParser;
         this.onlyGitDiff = onlyGitDiff;
-        this.graphBuilder = graphBuilder;
+        this.dependencySearcher = dependencySearcher;
     }
 
     /**
@@ -57,7 +51,7 @@ public class RestClassBuilder {
      * @return builder для цепочки вызовов
      */
     public RestClassBuilder withName(String name) {
-        restClass.setName(name);
+        classModel.setName(name);
         return this;
     }
 
@@ -88,9 +82,9 @@ public class RestClassBuilder {
      *
      * @return готовый объект RestClass
      */
-    public RestClass build() {
-        restClass.setMethods(restMethods);
-        return restClass;
+    public ClassModel build() {
+        classModel.setMethods(methodModels);
+        return classModel;
     }
 
     /**
@@ -109,9 +103,9 @@ public class RestClassBuilder {
      * @param classInfo информация о классе
      */
     private void setEndpointPathIfEmpty(ClassInfo classInfo) {
-        if (!StringUtils.hasText(restClass.getEndpointPath())) {
-            var endpointPath = endpointPathParser.pathOnClass(classInfo);
-            restClass.setEndpointPath(endpointPath);
+        if (!StringUtils.hasText(classModel.getEndpointPath())) {
+            var endpointPath = endpointPathParser.getEndpointPath(classInfo);
+            classModel.setEndpointPath(endpointPath);
         }
     }
 
@@ -121,13 +115,11 @@ public class RestClassBuilder {
      * @param classInfo информация о классе
      */
     private void extractClassMethods(ClassInfo classInfo) {
-        //todo нужно уйти от typeResolver и работать с ClassInfo
-
         for (var method : classInfo.getMethodInfo()) {
             var requestMapping = method.getAnnotationInfo(RequestMapping.class);
             if (requestMapping != null) {
-                var restMethod = buildRestMethod(method, new RestMethod());
-                restMethods.add(restMethod);
+                var restMethod = buildRestMethod(method, new MethodModel());
+                methodModels.add(restMethod);
                 restMethodNames.add(restMethod.getName());
             }
         }
@@ -140,8 +132,8 @@ public class RestClassBuilder {
      * @param builtMethod метод мы строим
      * @return построенный REST метод
      */
-    private RestMethod buildRestMethod(MethodInfo methodInfo, RestMethod builtMethod) {
-        return new RestMethodBuilder(methodInfo, builtMethod, endpointPathParser, onlyGitDiff, graphBuilder)
+    private MethodModel buildRestMethod(MethodInfo methodInfo, MethodModel builtMethod) {
+        return new RestMethodBuilder(methodInfo, builtMethod, endpointPathParser, onlyGitDiff, dependencySearcher)
                 .withName(createUniqueMethodName(methodInfo))
                 .withPathVariables()
                 .withRequest()

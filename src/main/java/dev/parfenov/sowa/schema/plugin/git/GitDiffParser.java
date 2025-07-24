@@ -5,11 +5,11 @@
  */
 package dev.parfenov.sowa.schema.plugin.git;
 
-import dev.parfenov.sowa.schema.plugin.parsers.dto.RestClass;
-import dev.parfenov.sowa.schema.plugin.parsers.dto.RestMethod;
+import dev.parfenov.sowa.schema.plugin.parsers.dto.ClassModel;
+import dev.parfenov.sowa.schema.plugin.parsers.dto.Entity;
+import dev.parfenov.sowa.schema.plugin.parsers.dto.MethodModel;
 import org.springframework.util.CollectionUtils;
 
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -29,25 +29,21 @@ import java.util.Set;
 public class GitDiffParser {
 
     private final Git git;
+    private boolean onlyGitDiff;
 
-    public GitDiffParser(final String branchDiffWith) {
+    public GitDiffParser(final String branchDiffWith, final boolean onlyGitDiff) {
         this.git = new Git(branchDiffWith);
+        this.onlyGitDiff = onlyGitDiff;
     }
 
     /**
-     * Анализирует изменения и обнуляет схемы для неизмененных типов.
-     * <p>
      * Для каждого метода REST класса проверяет, изменились ли типы запроса или ответа.
-     * Если тип не изменился, устанавливает его в null, чтобы избежать генерации схемы.
+     * Если тип изменился - устанавливает {@link Entity#setCanExport(boolean)} в {@code false}, чтобы избежать генерации схемы.
      *
-     * @param parsedClasses список проанализированных REST классов
+     * @param restClass найденный REST класс
      */
-    public void diffMethods(List<RestClass> parsedClasses) {
-        if (CollectionUtils.isEmpty(parsedClasses)) {
-            return;
-        }
-
-        for (var restClass : parsedClasses) {
+    public void diff(ClassModel restClass) {
+        if (onlyGitDiff) {
             processRestClassMethods(restClass);
         }
     }
@@ -55,14 +51,14 @@ public class GitDiffParser {
     /**
      * Обрабатывает методы REST класса и определяет необходимость генерации схем.
      */
-    private void processRestClassMethods(RestClass restClass) {
-        if (CollectionUtils.isEmpty(restClass.getMethods())) {
+    private void processRestClassMethods(ClassModel classModel) {
+        if (CollectionUtils.isEmpty(classModel.getMethods())) {
             return;
         }
 
-        for (var method : restClass.getMethods()) {
-            var responseChanged = isTypeChanged(method.getDependencies().getResponse());
-            var requestChanged = isTypeChanged(method.getDependencies().getRequest());
+        for (var method : classModel.getMethods()) {
+            var responseChanged = hasDiff(method.getResponse().getDependencies());
+            var requestChanged = hasDiff(method.getRequest().getDependencies());
 
             updateMethodTypes(method, responseChanged, requestChanged);
         }
@@ -74,22 +70,19 @@ public class GitDiffParser {
      * @param sourceFiles source-файлы зависимостей классов
      * @return true если тип изменился
      */
-    private boolean isTypeChanged(Set<String> sourceFiles) {
-        if (sourceFiles.isEmpty()) {
-            return false;
-        }
+    private boolean hasDiff(Set<String> sourceFiles) {
         return CollectionUtils.containsAny(git.getDiff(), sourceFiles);
     }
 
     /**
      * Обновляет типы метода на основе результатов анализа изменений.
      */
-    private void updateMethodTypes(RestMethod method, boolean responseChanged, boolean requestChanged) {
+    private void updateMethodTypes(MethodModel method, boolean responseChanged, boolean requestChanged) {
         if (!responseChanged) {
-            method.setResponse(null);
+            method.getResponse().setCanExport(false);
         }
         if (!requestChanged) {
-            method.setRequest(null);
+            method.getRequest().setCanExport(false);
         }
     }
 }
