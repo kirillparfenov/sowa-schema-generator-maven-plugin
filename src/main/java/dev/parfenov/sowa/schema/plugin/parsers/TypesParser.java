@@ -20,33 +20,6 @@ import java.util.Optional;
  */
 public class TypesParser {
 
-    private final TypeResolver typeResolver = new TypeResolver();
-
-    /**
-     * Разрешает информацию о типе.
-     *
-     * @param type Java тип для анализа
-     * @return информация о разрешенном типе
-     */
-    public ResolvedType resolveErasedType(Type type) {
-        return typeResolver.resolve(type);
-    }
-
-    /**
-     * Извлекает подробную информацию о членах типа.
-     *
-     * @param type разрешенный тип для анализа
-     * @return подробная информация о классе включая методы, поля и аннотации
-     */
-    public ResolvedTypeWithMembers resolveTypeMembers(ResolvedType type) {
-        var memberResolver = new MemberResolver(typeResolver);
-        return memberResolver.resolve(
-                type,
-                new AnnotationConfiguration.StdConfiguration(AnnotationInclusion.INCLUDE_AND_INHERIT_IF_INHERITED),
-                null
-        );
-    }
-
     /**
      * Проверяет является ли переданный тип {@link Void}
      *

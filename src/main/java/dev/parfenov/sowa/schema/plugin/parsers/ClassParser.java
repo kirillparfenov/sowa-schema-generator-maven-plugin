@@ -7,8 +7,8 @@ package dev.parfenov.sowa.schema.plugin.parsers;
 
 import dev.parfenov.sowa.schema.plugin.classloader.ClassLoader;
 import dev.parfenov.sowa.schema.plugin.git.GitDiffParser;
-import dev.parfenov.sowa.schema.plugin.git.GraphBuilder;
-import dev.parfenov.sowa.schema.plugin.parsers.dto.RestClass;
+import dev.parfenov.sowa.schema.plugin.git.DependencySearcher;
+import dev.parfenov.sowa.schema.plugin.parsers.dto.ClassModel;
 import io.github.classgraph.ClassInfo;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,8 +26,8 @@ public class ClassParser {
 
     private final ClassLoader classLoader;
     private final EndpointPathParser endpointPathParser;
-    private final TypesParser typesParser = new TypesParser();
     private final ClassParserConfig config;
+    private final GitDiffParser gitDiffParser;
 
     /**
      * Создает парсер классов с указанной конфигурацией.
@@ -38,6 +38,7 @@ public class ClassParser {
         this.classLoader = new ClassLoader(classParserConfig);
         this.endpointPathParser = new EndpointPathParser(classParserConfig.project());
         this.config = classParserConfig;
+        this.gitDiffParser = new GitDiffParser(classParserConfig.branchDiffWith(), classParserConfig.onlyGitDiff());
     }
 
     /**
@@ -49,7 +50,7 @@ public class ClassParser {
      *
      * @return список проанализированных REST классов
      */
-    public List<RestClass> parseAllRestClasses() {
+    public List<ClassModel> parseAllRestClasses() {
         try (var scanResult = classLoader.getClassgraph().scan()) {
             var restControllers = scanResult
                     .getClassesWithAnyAnnotation(RestController.class, Controller.class)
@@ -57,17 +58,11 @@ public class ClassParser {
                     .stream()
                     .toList();
 
-            var graphBuilder = new GraphBuilder(scanResult);
-
-            var result = restControllers.stream()
-                    .map(classInfo -> parseRestController(classInfo, graphBuilder))
+            var dependencySearcher = new DependencySearcher(scanResult);
+            return restControllers.stream()
+                    .map(classInfo -> parseRestController(classInfo, dependencySearcher))
+                    .peek(gitDiffParser::diff)
                     .toList();
-
-            if (config.onlyGitDiff()) {
-                new GitDiffParser(config.branchDiffWith()).diffMethods(result);
-            }
-
-            return result;
         } catch (Exception e) {
             throw new RuntimeException("Ошибка во время сканирования графа классов", e);
         }
@@ -95,8 +90,8 @@ public class ClassParser {
      * @param restController информация о классе контроллера
      * @return объект REST класса с методами
      */
-    public RestClass parseRestController(ClassInfo restController, GraphBuilder graphBuilder) {
-        var builder = new RestClassBuilder(endpointPathParser, config.onlyGitDiff(), graphBuilder)
+    public ClassModel parseRestController(ClassInfo restController, DependencySearcher dependencySearcher) {
+        var builder = new RestClassBuilder(endpointPathParser, config.onlyGitDiff(), dependencySearcher)
                 .withName(restController.getSimpleName())
                 .withMainClass(restController);
 

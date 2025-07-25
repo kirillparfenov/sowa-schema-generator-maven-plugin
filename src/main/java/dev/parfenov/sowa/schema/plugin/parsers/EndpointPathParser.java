@@ -5,15 +5,13 @@
  */
 package dev.parfenov.sowa.schema.plugin.parsers;
 
-import dev.parfenov.sowa.schema.plugin.generator.Regex;
-import dev.parfenov.sowa.schema.plugin.parsers.dto.RestClass;
-import dev.parfenov.sowa.schema.plugin.parsers.dto.RestMethod;
+import dev.parfenov.sowa.schema.plugin.generators.Regex;
+import dev.parfenov.sowa.schema.plugin.parsers.dto.ClassModel;
+import dev.parfenov.sowa.schema.plugin.parsers.dto.MethodModel;
 import io.github.classgraph.ClassInfo;
+import io.github.classgraph.MethodInfo;
 import org.apache.maven.project.MavenProject;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.*;
-
-import java.lang.reflect.Method;
 
 /**
  * Парсер путей эндпоинтов Spring MVC.
@@ -32,13 +30,13 @@ public class EndpointPathParser {
     /**
      * Разрешает полный путь с переменными в regex формат.
      *
-     * @param restClass  REST контроллер
-     * @param restMethod метод контроллера
+     * @param classModel  REST контроллер
+     * @param methodModel метод контроллера
      * @return полный путь с regex паттернами для переменных пути
      */
-    public String resolvePathWithVariables(RestClass restClass, RestMethod restMethod) {
-        var fullPath =  contextPath() + restClass.getEndpointPath() + restMethod.getEndpointPath() + "$";
-        var pathVariables = restMethod.getPathVariables();
+    public String resolvePathWithVariables(ClassModel classModel, MethodModel methodModel) {
+        var fullPath = contextPath() + classModel.getEndpointPath() + methodModel.getEndpointPath() + "$";
+        var pathVariables = methodModel.getPathVariables();
         if (CollectionUtils.isEmpty(pathVariables)) {
             return fullPath;
         }
@@ -62,74 +60,23 @@ public class EndpointPathParser {
     }
 
     /**
-     * Извлекает путь из аннотации @RequestMapping на классе.
+     * Получить HTTP-путь класса
      *
-     * @param controllerClass информация о классе контроллера
-     * @return путь из аннотации или пустая строка
+     * @param classInfo класс, над которым ищем HTTP-путь
+     * @return HTTP-путь
      */
-    public String pathOnClass(ClassInfo controllerClass) {
-        var requestMapping = AnnotationParser.findDirectOnClass(RequestMapping.class, controllerClass);
-        if (requestMapping != null) {
-            if (requestMapping.value().length > 0) {
-                return cleanSlashes(requestMapping.value()[0]);
-            }
-        }
-        return "";
+    public String getEndpointPath(ClassInfo classInfo) {
+        return cleanSlashes(AnnotationParser.extractPathValue(classInfo.getAnnotationInfo()));
     }
 
     /**
-     * Извлекает путь из аннотаций маппинга на методе.
-     * <p>
-     * Поддерживает @RequestMapping, @GetMapping, @PostMapping,
+     * Получить HTTP-путь метода
      *
-     * @param method метод для анализа
-     * @return путь из аннотации или пустая строка
-     * @PutMapping, @DeleteMapping, @PatchMapping.
+     * @param methodInfo метод, над которым ищем HTTP-путь
+     * @return HTTP-путь
      */
-    public String pathOnMethod(Method method) {
-        var requestMapping = AnnotationParser.findDirectOnMethod(RequestMapping.class, method);
-        if (requestMapping != null) {
-            if (requestMapping.value().length > 0) {
-                return cleanSlashes(requestMapping.value()[0]);
-            }
-        }
-
-        var getMapping = AnnotationParser.findDirectOnMethod(GetMapping.class, method);
-        if (getMapping != null) {
-            if (getMapping.value().length > 0) {
-                return cleanSlashes(getMapping.value()[0]);
-            }
-        }
-
-        var postMapping = AnnotationParser.findDirectOnMethod(PostMapping.class, method);
-        if (postMapping != null) {
-            if (postMapping.value().length > 0) {
-                return cleanSlashes(postMapping.value()[0]);
-            }
-        }
-
-        var putMapping = AnnotationParser.findDirectOnMethod(PutMapping.class, method);
-        if (putMapping != null) {
-            if (putMapping.value().length > 0) {
-                return cleanSlashes(putMapping.value()[0]);
-            }
-        }
-
-        var deleteMapping = AnnotationParser.findDirectOnMethod(DeleteMapping.class, method);
-        if (deleteMapping != null) {
-            if (deleteMapping.value().length > 0) {
-                return cleanSlashes(deleteMapping.value()[0]);
-            }
-        }
-
-        var patchMapping = AnnotationParser.findDirectOnMethod(PatchMapping.class, method);
-        if (patchMapping != null) {
-            if (patchMapping.value().length > 0) {
-                return cleanSlashes(patchMapping.value()[0]);
-            }
-        }
-
-        return "";
+    public String getEndpointPath(MethodInfo methodInfo) {
+        return cleanSlashes(AnnotationParser.extractPathValue(methodInfo.getAnnotationInfo()));
     }
 
     /**

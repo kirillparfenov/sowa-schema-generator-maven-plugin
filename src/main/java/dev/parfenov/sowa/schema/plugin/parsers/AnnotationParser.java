@@ -5,11 +5,17 @@
  */
 package dev.parfenov.sowa.schema.plugin.parsers;
 
+import io.github.classgraph.AnnotationInfo;
+import io.github.classgraph.AnnotationInfoList;
 import io.github.classgraph.ClassInfo;
+import io.github.classgraph.MethodInfo;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Утилиты для поиска и анализа аннотаций на классах и методах.
@@ -19,71 +25,77 @@ import java.util.Optional;
  */
 public class AnnotationParser {
 
+    private static final Set<String> MAPPING_ANNOTATIONS = Set.of(
+            "org.springframework.web.bind.annotation.RequestMapping",
+            "org.springframework.web.bind.annotation.GetMapping",
+            "org.springframework.web.bind.annotation.PostMapping",
+            "org.springframework.web.bind.annotation.PutMapping",
+            "org.springframework.web.bind.annotation.DeleteMapping",
+            "org.springframework.web.bind.annotation.PatchMapping"
+    );
+
     private AnnotationParser() {
     }
 
     /**
-     * Ищет аннотацию непосредственно на классе.
+     * Получение value из {@link AnnotationParser#MAPPING_ANNOTATIONS}
      *
-     * @param <T>               тип аннотации
-     * @param lookingAnnotation класс искомой аннотации
-     * @param classInfo         информация о классе
-     * @return найденная аннотация или null
+     * @param annotations список аннотаций
+     * @return значение value, либо пустая строка
      */
-    public static <T extends Annotation> T findDirectOnClass(Class<T> lookingAnnotation, ClassInfo classInfo) {
-        var annotationInfo = classInfo.getAnnotationInfo(lookingAnnotation);
-        return annotationInfo != null
-                ? lookingAnnotation.cast(annotationInfo.loadClassAndInstantiate())
-                : null;
-    }
-
-    /**
-     * Ищет аннотацию непосредственно на методе.
-     *
-     * @param <T>               тип аннотации
-     * @param lookingAnnotation класс искомой аннотации
-     * @param realMethod        метод для поиска
-     * @return найденная аннотация или null
-     */
-    public static <T extends Annotation> T findDirectOnMethod(Class<T> lookingAnnotation, Method realMethod) {
-        for (var annotation : realMethod.getAnnotations()) {
-            if (lookingAnnotation.isAssignableFrom(annotation.annotationType())) {
-                return lookingAnnotation.cast(annotation);
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Ищет аннотацию на методе напрямую или внутри других аннотаций.
-     *
-     * @param <T>               тип аннотации
-     * @param lookingAnnotation класс искомой аннотации
-     * @param realMethod        метод для поиска
-     * @return найденная аннотация или null
-     */
-    public static <T extends Annotation> T directOnMethodOrAnnotations(Class<T> lookingAnnotation, Method realMethod) {
-        return Optional
-                .ofNullable(findDirectOnMethod(lookingAnnotation, realMethod))
-                .orElseGet(() -> findInsideAnyAnnotationOnMethod(lookingAnnotation, realMethod));
-    }
-
-    /**
-     * Ищет аннотацию внутри других аннотаций на методе (мета-аннотации).
-     *
-     * @param <T>               тип аннотации
-     * @param lookingAnnotation класс искомой аннотации
-     * @param method            метод для поиска
-     * @return найденная мета-аннотация или null
-     */
-    public static <T extends Annotation> T findInsideAnyAnnotationOnMethod(Class<T> lookingAnnotation, Method method) {
-        for (var annotation : method.getAnnotations()) {
-            for (var internalAnnotation : annotation.annotationType().getDeclaredAnnotations()) {
-                if (lookingAnnotation.isAssignableFrom(internalAnnotation.annotationType())) {
-                    return lookingAnnotation.cast(internalAnnotation);
+    public static String extractPathValue(AnnotationInfoList annotations) {
+        for (var annotation : annotations) {
+            for (var paramValue : annotation.getParameterValues()) {
+                if (paramValue.getName().equals("value") && paramValue.getValue() instanceof String[] value) {
+                    if (value.length > 0 && MAPPING_ANNOTATIONS.contains(annotation.getName())) {
+                        return value[0];
+                    }
                 }
             }
         }
-        return null;
+        return "";
+    }
+
+    /**
+     * Получить HTTP-метод, присвоенный методу
+     *
+     * @param methodInfo метод, над которым ищем HTTP-метод
+     * @return HTTP-метод
+     */
+    public static Optional<HttpMethod> getHttpMethod(MethodInfo methodInfo) {
+        return getAnnotation(RequestMapping.class, methodInfo)
+                .map(RequestMapping::method)
+                .filter(method -> method.length > 0)
+                .map(method -> method[0].asHttpMethod());
+    }
+
+    /**
+     * Ищет аннотацию на методе.
+     *
+     * @param <T>               тип аннотации
+     * @param lookingAnnotation класс искомой аннотации
+     * @param method            метод, над которым ищем аннотацию
+     * @return найденная аннотация или null
+     */
+    public static <T extends Annotation> Optional<T> getAnnotation(Class<T> lookingAnnotation, MethodInfo method) {
+        return extractAnnotation(
+                lookingAnnotation,
+                method.getAnnotationInfo(lookingAnnotation)
+
+        );
+    }
+
+    /**
+     * Получить искомую аннотацию
+     *
+     * @param <A>               тип искомой аннотации
+     * @param lookingAnnotation класс искомой аннотации
+     * @param annotationInfo    найденная аннотация, либо null
+     * @return загруженная аннотация с данными
+     */
+    private static <A extends Annotation> Optional<A> extractAnnotation(Class<A> lookingAnnotation, AnnotationInfo annotationInfo) {
+        return Optional
+                .ofNullable(annotationInfo)
+                .map(annotation -> lookingAnnotation.cast(annotation.loadClassAndInstantiate()));
     }
 }
