@@ -12,6 +12,7 @@ import dev.parfenov.sowa.schema.plugin.generators.NameGenerator;
 import dev.parfenov.sowa.schema.plugin.parsers.EndpointPathParser;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.ClassModel;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.MethodModel;
+import org.springframework.http.HttpMethod;
 import org.springframework.util.CollectionUtils;
 import org.yaml.snakeyaml.emitter.Emitter;
 
@@ -147,7 +148,7 @@ public class InfraExporter {
      * @return null, либо конфигурацию с запросом
      */
     private ServicesYaml.RequestResponse createSuccessRequest(ClassModel classModel, MethodModel method) {
-        if (method.getRequest().getType() == null) return null;
+        if (method.getRequest().getType() == null || HttpMethod.GET.equals(method.getHttpMethod())) return null;
 
         return servicesFactory.createRequestResponse(
                 getHttpMethodName(method),
