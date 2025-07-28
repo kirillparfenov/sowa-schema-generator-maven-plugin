@@ -13,8 +13,11 @@ import dev.parfenov.sowa.schema.plugin.parsers.EndpointPathParser;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.ClassModel;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.MethodModel;
 import org.springframework.util.CollectionUtils;
+import org.yaml.snakeyaml.emitter.Emitter;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -63,6 +66,7 @@ public class InfraExporter {
         var servicesYaml = createServicesYaml(classModels);
         var filtered = canExportFilter(servicesYaml);
         exportYamlFile(filtered);
+        replaceSingleQuote();
     }
 
     /**
@@ -299,6 +303,25 @@ public class InfraExporter {
             createYamlMapper().writeValue(directoriesBuilder.servicesYamlFile(), servicesYaml);
         } catch (IOException e) {
             throw new InfraExportException("Ошибка записи файла services.yml", e);
+        }
+    }
+
+    /**
+     * Удаляет одиночные кавычки вокруг '!include'.
+     * Невозможно сделать это через наследование {@link YAMLMapper} или {@link Emitter}.
+     */
+    private void replaceSingleQuote() {
+        try {
+            var yamlPath = directoriesBuilder.servicesYamlFile().toPath();
+            var lines = Files.readAllLines(yamlPath, StandardCharsets.UTF_8);
+
+            var modifiedLines = lines.stream()
+                    .map(line -> line.replace("'!include'", "!include"))
+                    .collect(Collectors.toList());
+
+            Files.write(yamlPath, modifiedLines, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException("Ошибка при обработке '!include'");
         }
     }
 
