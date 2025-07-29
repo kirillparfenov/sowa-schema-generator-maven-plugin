@@ -42,10 +42,10 @@ import static dev.parfenov.sowa.schema.plugin.generators.config.ValidationConsta
  * }</pre>
  *
  * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
- * @since 2025
  * @see JakartaValidationModule Базовый модуль Jakarta валидации
  * @see ConstraintResolver Утилиты для разрешения ограничений
  * @see StringLengthCalculator Калькулятор длины строк
+ * @since 2025
  */
 public class CustomJakartaValidationModule extends JakartaValidationModule {
 
@@ -100,7 +100,8 @@ public class CustomJakartaValidationModule extends JakartaValidationModule {
      */
     private void applyToConfigBuilder(SchemaGeneratorGeneralConfigPart configPart) {
         configPart.withArrayMaxItemsResolver(this::resolveArrayMaxItems);
-//        configPart.withNumberInclusiveMaximumResolver(this::resolveTypeMaximum);
+        configPart.withNumberInclusiveMaximumResolver(this::resolveNumberInclusiveMaximum);
+        configPart.withNumberInclusiveMinimumResolver(this::resolveNumberInclusiveMinimum);
         configPart.withDescriptionResolver(this.createTypePropertyResolver(Schema::description, description -> !description.isBlank()));
     }
 
@@ -142,19 +143,39 @@ public class CustomJakartaValidationModule extends JakartaValidationModule {
         return typeScope.isContainerType() ? ARRAY_MAX_SIZE : null;
     }
 
-//    /**
-//     * Определяет максимальное числовое значение для типа.
-//     * <p>
-//     * Использует {@link ConstraintResolver#resolveNumericMaximum(com.fasterxml.classmate.ResolvedType)}
-//     * для получения максимального значения примитивных числовых типов.
-//     *
-//     * @param typeScope область видимости типа, не null
-//     * @return максимальное значение типа или null если не поддерживается
-//     * @see ConstraintResolver#resolveNumericMaximum
-//     */
-//    private BigDecimal resolveTypeMaximum(TypeScope typeScope) {
-//        return resolveNumericMaximum(typeScope.getType());
-//    }
+    /**
+     * Определяет максимальное числовое значение для типа.
+     * <p>
+     * Использует {@link ConstraintResolver#resolveNumericMaximum(com.fasterxml.classmate.ResolvedType)}
+     * для получения максимального значения примитивных числовых типов.
+     *
+     * @param typeScope область видимости типа, не null
+     * @return максимальное значение типа или null если не поддерживается
+     * @see ConstraintResolver#resolveNumericMaximum
+     */
+    private BigDecimal resolveNumberInclusiveMaximum(TypeScope typeScope) {
+        if (typeScope instanceof MemberScope<?,?> memberScope) {
+            return resolveNumberInclusiveMaximum(memberScope);
+        }
+        return resolveNumericMaximum(typeScope.getType());
+    }
+
+    /**
+     * Определяет минимальное числовое значение для типа.
+     * <p>
+     * Использует {@link ConstraintResolver#resolveNumericMinimum(com.fasterxml.classmate.ResolvedType)}
+     * для получения максимального значения примитивных числовых типов.
+     *
+     * @param typeScope область видимости типа, не null
+     * @return максимальное значение типа или null если не поддерживается
+     * @see ConstraintResolver#resolveNumericMinimum
+     */
+    private BigDecimal resolveNumberInclusiveMinimum(TypeScope typeScope) {
+        if (typeScope instanceof MemberScope<?,?> memberScope) {
+            return resolveNumberInclusiveMinimum(memberScope);
+        }
+        return resolveNumericMinimum(typeScope.getType());
+    }
 
     /**
      * Определяет nullable свойство для члена класса.
@@ -249,7 +270,7 @@ public class CustomJakartaValidationModule extends JakartaValidationModule {
      * @return включающий максимум из Schema или автоматический максимум типа
      */
     private BigDecimal resolveInclusiveMaximum(MemberScope<?, ?> memberScope) {
-        return getSchemaAnnotationValue(memberScope, Schema::maximum, maximum -> !maximum.isEmpty())
+        return getSchemaAnnotationValue(memberScope, Schema::maximum, maximum -> !maximum.isBlank())
                 .filter(maximum -> getSchemaAnnotationValue(memberScope, Schema::exclusiveMaximum, Boolean.FALSE::equals).isPresent())
                 .map(BigDecimal::new)
                 .orElseGet(() -> resolveNumericMaximum(memberScope.getType()));
@@ -266,7 +287,7 @@ public class CustomJakartaValidationModule extends JakartaValidationModule {
      * @return включающий минимум из Schema или автоматический минимум типа
      */
     private BigDecimal resolveInclusiveMinimum(MemberScope<?, ?> memberScope) {
-        return getSchemaAnnotationValue(memberScope, Schema::minimum, minimum -> !minimum.isEmpty())
+        return getSchemaAnnotationValue(memberScope, Schema::minimum, minimum -> !minimum.isBlank())
                 .filter(minimum -> getSchemaAnnotationValue(memberScope, Schema::exclusiveMinimum, Boolean.FALSE::equals).isPresent())
                 .map(BigDecimal::new)
                 .orElseGet(() -> resolveNumericMinimum(memberScope.getType()));
