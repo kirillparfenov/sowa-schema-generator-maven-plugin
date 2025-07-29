@@ -46,6 +46,10 @@ public class GeneratorConfig {
                 .with(new CustomJakartaValidationModule(stringLengthIncreasePercent, JakartaValidationOption.INCLUDE_PATTERN_EXPRESSIONS));
 
         configBuilder.with(new CustomJacksonModule(configBuilder.getObjectMapper()));
+        configBuilder.forTypesInGeneral().withCustomDefinitionProvider(new CustomObjectDefinitionProvider());
+        configBuilder.forTypesInGeneral().withCustomDefinitionProvider(new CustomVoidDefinitionProvider());
+        configBuilder.forTypesInGeneral().withTypeAttributeOverride(new CustomTypeAttributeOverride());
+        configBuilder.forTypesInGeneral().withTypeAttributeOverride(new AllOfAttributeOverride());
 
         if (extractDefinitions) {
             configBuilder.with(Option.DEFINITION_FOR_MAIN_SCHEMA);

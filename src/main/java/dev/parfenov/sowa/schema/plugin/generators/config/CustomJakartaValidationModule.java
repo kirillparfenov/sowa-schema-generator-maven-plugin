@@ -106,10 +106,7 @@ public class CustomJakartaValidationModule extends JakartaValidationModule {
     private void applyToConfigBuilder(SchemaGeneratorGeneralConfigPart configPart) {
         configPart.withArrayMaxItemsResolver(this::resolveArrayMaxItems);
 //        configPart.withNumberInclusiveMaximumResolver(this::resolveTypeMaximum);
-        configPart.withCustomDefinitionProvider(new CustomObjectDefinitionProvider());
-        configPart.withCustomDefinitionProvider(new CustomVoidDefinitionProvider());
         configPart.withDescriptionResolver(this.createTypePropertyResolver(Schema::description, description -> !description.isBlank()));
-        configPart.withTypeAttributeOverride(new CustomTypeAttributeOverride());
     }
 
     /**
