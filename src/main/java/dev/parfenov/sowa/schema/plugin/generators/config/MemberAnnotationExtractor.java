@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.generators.config;
 
 import com.github.victools.jsonschema.generator.MemberScope;
@@ -18,6 +13,9 @@ import java.util.function.Predicate;
  * <p>
  * Предоставляет единообразные методы для получения значений из различных
  * аннотаций валидации с учетом приоритетов и фильтрации.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025
  */
 public final class MemberAnnotationExtractor {
 

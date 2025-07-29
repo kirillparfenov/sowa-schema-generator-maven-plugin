@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.generators.config;
 
 import com.github.victools.jsonschema.generator.*;
@@ -46,7 +41,7 @@ import static dev.parfenov.sowa.schema.plugin.generators.config.ValidationConsta
  *     .build();
  * }</pre>
  *
- * @author Kirill Parfenov
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
  * @since 2025
  * @see JakartaValidationModule Базовый модуль Jakarta валидации
  * @see ConstraintResolver Утилиты для разрешения ограничений
@@ -106,10 +101,7 @@ public class CustomJakartaValidationModule extends JakartaValidationModule {
     private void applyToConfigBuilder(SchemaGeneratorGeneralConfigPart configPart) {
         configPart.withArrayMaxItemsResolver(this::resolveArrayMaxItems);
 //        configPart.withNumberInclusiveMaximumResolver(this::resolveTypeMaximum);
-        configPart.withCustomDefinitionProvider(new CustomObjectDefinitionProvider());
-        configPart.withCustomDefinitionProvider(new CustomVoidDefinitionProvider());
         configPart.withDescriptionResolver(this.createTypePropertyResolver(Schema::description, description -> !description.isBlank()));
-        configPart.withTypeAttributeOverride(new CustomTypeAttributeOverride());
     }
 
     /**
