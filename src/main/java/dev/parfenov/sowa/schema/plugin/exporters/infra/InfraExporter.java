@@ -19,6 +19,7 @@ import org.yaml.snakeyaml.emitter.Emitter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -66,6 +67,7 @@ public class InfraExporter {
 
         var servicesYaml = createServicesYaml(classModels);
         var filtered = canExportFilter(servicesYaml);
+        filterById(filtered);
         exportYamlFile(filtered);
         replaceSingleQuote();
     }
@@ -291,6 +293,15 @@ public class InfraExporter {
         return servicesYaml.stream()
                 .filter(ServicesYaml::isExport)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Сортировка по id
+     *
+     * @param servicesYaml конфигурации сервисов
+     */
+    private void filterById(List<ServicesYaml> servicesYaml) {
+        servicesYaml.sort(Comparator.comparing(ServicesYaml::getId));
     }
 
     /**
