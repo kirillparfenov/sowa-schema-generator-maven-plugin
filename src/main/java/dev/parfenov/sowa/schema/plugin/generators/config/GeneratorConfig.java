@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.generators.config;
 
 import com.github.victools.jsonschema.generator.*;
@@ -13,6 +8,9 @@ import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidatio
  * <p>
  * Настраивает параметры генерации схем включая опции валидации,
  * обработку определений и интеграцию с Jakarta Validation.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025
  */
 public class GeneratorConfig {
 

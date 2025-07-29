@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.generators.config;
 
 import com.fasterxml.classmate.ResolvedType;
@@ -35,7 +30,7 @@ import static dev.parfenov.sowa.schema.plugin.generators.config.ValidationConsta
  * <p>
  * Все методы статические и null-safe. Класс нельзя инстанцировать.
  *
- * @author Kirill Parfenov
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
  * @since 2025
  * @see Schema OpenAPI Schema аннотация
  * @see ValidationConstants Константы для валидации

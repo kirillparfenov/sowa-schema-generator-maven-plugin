@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.generators.config;
 
 import com.fasterxml.classmate.ResolvedType;
@@ -21,7 +16,9 @@ import com.github.victools.jsonschema.generator.SchemaKeyword;
  * так и null значения.
  * </p>
  *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
  * @see CustomDefinitionProviderV2
+ * @since 2025
  */
 public class CustomObjectDefinitionProvider implements CustomDefinitionProviderV2 {
 

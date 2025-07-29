@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.generators.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -15,6 +10,9 @@ import com.github.victools.jsonschema.generator.TypeScope;
 
 /**
  * Переопределение атрибутов типов JSON схемы.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025
  */
 public class CustomTypeAttributeOverride implements TypeAttributeOverrideV2 {
 

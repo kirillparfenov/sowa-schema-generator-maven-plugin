@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.generators.config;
 
 import com.github.victools.jsonschema.generator.*;
@@ -46,7 +41,7 @@ import static dev.parfenov.sowa.schema.plugin.generators.config.ValidationConsta
  *     .build();
  * }</pre>
  *
- * @author Kirill Parfenov
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
  * @since 2025
  * @see JakartaValidationModule Базовый модуль Jakarta валидации
  * @see ConstraintResolver Утилиты для разрешения ограничений
