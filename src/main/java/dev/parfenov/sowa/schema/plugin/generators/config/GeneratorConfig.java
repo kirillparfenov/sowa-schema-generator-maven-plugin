@@ -36,7 +36,6 @@ public class GeneratorConfig {
                 .with(Option.DEFINITIONS_FOR_ALL_OBJECTS)
                 .with(Option.DEFINITIONS_FOR_MEMBER_SUPERTYPES)
                 .with(Option.INLINE_NULLABLE_SCHEMAS)
-                .with(Option.MAP_VALUES_AS_ADDITIONAL_PROPERTIES)
                 .with(Option.ENUM_KEYWORD_FOR_SINGLE_VALUES)
                 .with(Option.ALLOF_CLEANUP_AT_THE_END)
                 /// если не передать JakartaValidationOption.INCLUDE_PATTERN_EXPRESSIONS - не будет учитываться аннотация @Pattern
@@ -48,6 +47,7 @@ public class GeneratorConfig {
         configBuilder.forTypesInGeneral().withCustomDefinitionProvider(new CustomVoidDefinitionProvider());
         configBuilder.forTypesInGeneral().withTypeAttributeOverride(new CustomTypeAttributeOverride());
         configBuilder.forTypesInGeneral().withTypeAttributeOverride(new AllOfAttributeOverride());
+        configBuilder.forTypesInGeneral().withCustomDefinitionProvider(new EnumMapDefinitionProvider());
 
         if (extractDefinitions) {
             configBuilder.with(Option.DEFINITION_FOR_MAIN_SCHEMA);
