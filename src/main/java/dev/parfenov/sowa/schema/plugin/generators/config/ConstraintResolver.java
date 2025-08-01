@@ -2,7 +2,7 @@ package dev.parfenov.sowa.schema.plugin.generators.config;
 
 import com.fasterxml.classmate.ResolvedType;
 import com.github.victools.jsonschema.generator.MemberScope;
-import dev.parfenov.sowa.schema.plugin.generators.Regex;
+import dev.parfenov.sowa.schema.plugin.generators.PathRegexResolver;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.util.ReflectionUtils;
 
@@ -31,9 +31,9 @@ import static dev.parfenov.sowa.schema.plugin.generators.config.ValidationConsta
  * Все методы статические и null-safe. Класс нельзя инстанцировать.
  *
  * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
- * @since 2025
  * @see Schema OpenAPI Schema аннотация
  * @see ValidationConstants Константы для валидации
+ * @since 2025
  */
 public final class ConstraintResolver {
 
@@ -171,7 +171,7 @@ public final class ConstraintResolver {
      * @param type разрешенный тип для анализа
      * @return Optional с классом числового типа или empty если тип не поддерживается
      */
-    private static Optional<Class<?>> getNumberClass(ResolvedType type) {
+    public static Optional<Class<?>> getNumberClass(ResolvedType type) {
         if (
                 type.isInstanceOf(BigDecimal.class) || type.isInstanceOf(BigInteger.class)
                         || type.isInstanceOf(Character.class) || type.isInstanceOf(char.class)
@@ -234,13 +234,15 @@ public final class ConstraintResolver {
      */
     public static String resolveStringPattern(MemberScope<?, ?> member,
                                               Function<MemberScope<?, ?>, String> superResolver) {
-        if (member.getType().isInstanceOf(UUID.class)) {
-            return "^%s$".formatted(Regex.getRegexOrDefault(UUID.class.getName()));
-        }
-
         return Optional
                 .ofNullable(superResolver.apply(member))
                 .or(() -> getSchemaAnnotationValue(member, Schema::pattern, pattern -> !pattern.isEmpty()))
-                .orElse(null);
+                .orElseGet(() -> resolveStringPatternByType(member.getType().getErasedType()));
+    }
+
+    private static String resolveStringPatternByType(Class<?> clazz) {
+        return clazz.isAssignableFrom(UUID.class)
+                ? "^%s$".formatted(PathRegexResolver.uidRegex())
+                : null;
     }
 } 

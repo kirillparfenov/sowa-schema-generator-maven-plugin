@@ -5,7 +5,7 @@
  */
 package dev.parfenov.sowa.schema.plugin.parsers;
 
-import dev.parfenov.sowa.schema.plugin.generators.Regex;
+import dev.parfenov.sowa.schema.plugin.generators.PathRegexResolver;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.ClassModel;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.MethodModel;
 import io.github.classgraph.ClassInfo;
@@ -43,8 +43,7 @@ public class EndpointPathParser {
 
         for (var pathVariable : pathVariables) {
             var name = "\\{" + pathVariable.getParamName() + "}";
-            var typeName = pathVariable.getParamType().getTypeName();
-            var regex = Regex.getRegexOrDefault(typeName);
+            var regex = PathRegexResolver.getRegexOrDefault(pathVariable.getParamType());
             fullPath = fullPath.replaceAll(name, regex);
         }
         return fullPath;
