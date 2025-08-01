@@ -27,7 +27,8 @@ public class CustomTypeAttributeOverride implements TypeAttributeOverrideV2 {
     public void overrideTypeAttributes(ObjectNode schemaNode, TypeScope scope, SchemaGenerationContext context) {
         var type = scope.getType();
         if (type != null && isByteType(type.getErasedType())) {
-            addAdditionalArrayType(schemaNode, SchemaKeyword.TAG_TYPE_INTEGER, context);
+            addAdditionalArrayValue(schemaNode, SchemaKeyword.TAG_TYPE_INTEGER, context);
+            removeArrayValue(schemaNode, SchemaKeyword.TAG_TYPE_STRING, context);
             addTextFieldIfAbsent(schemaNode, context.getKeyword(SchemaKeyword.TAG_FORMAT), byte.class.getName());
         }
 
@@ -51,13 +52,13 @@ public class CustomTypeAttributeOverride implements TypeAttributeOverrideV2 {
      * Если поле с типами уже существует, преобразует его в массив (если оно одиночное)
      * и добавляет новый тип.
      *
-     * @param schemaNode     узел схемы для модификации
-     * @param additionalType дополнительный тип для добавления
-     * @param context        контекст генерации схемы
+     * @param schemaNode      узел схемы для модификации
+     * @param additionalValue дополнительный тип для добавления
+     * @param context         контекст генерации схемы
      */
-    private void addAdditionalArrayType(ObjectNode schemaNode, SchemaKeyword additionalType, SchemaGenerationContext context) {
+    private void addAdditionalArrayValue(ObjectNode schemaNode, SchemaKeyword additionalValue, SchemaGenerationContext context) {
         final var typeKeyword = context.getKeyword(SchemaKeyword.TAG_TYPE);
-        final var additionalTypeValue = context.getKeyword(additionalType);
+        final var additionalTypeValue = context.getKeyword(additionalValue);
 
         if (!schemaNode.has(typeKeyword)) {
             initializeTypeArray(schemaNode, typeKeyword);
@@ -69,6 +70,29 @@ public class CustomTypeAttributeOverride implements TypeAttributeOverrideV2 {
         } else if (jsonNode.isArray()) {
             addTypeToExistingArray(schemaNode, typeKeyword, additionalTypeValue);
         }
+    }
+
+    /**
+     * Удаляет элемент массива.
+     *
+     * @param schemaNode  узел схемы для модификации
+     * @param removeValue удаляемый тип из массива
+     * @param context     контекст генерации схемы
+     */
+    private void removeArrayValue(ObjectNode schemaNode, SchemaKeyword removeValue, SchemaGenerationContext context) {
+        final var typeKeyword = context.getKeyword(SchemaKeyword.TAG_TYPE);
+        final var removingTypeValue = context.getKeyword(removeValue);
+
+        if (!schemaNode.has(typeKeyword)) {
+            initializeTypeArray(schemaNode, typeKeyword);
+        }
+
+        var jsonNode = schemaNode.get(typeKeyword);
+        if (jsonNode.isTextual()) {
+            var text = jsonNode.asText();
+            schemaNode.putArray(typeKeyword).add(text);
+        }
+        schemaNode.withArray(typeKeyword).removeIf(node -> node.asText().equals(removingTypeValue));
     }
 
     /**
