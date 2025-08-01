@@ -6,6 +6,7 @@
 package dev.parfenov.sowa.schema.plugin.generators;
 
 import com.fasterxml.classmate.TypeResolver;
+import dev.parfenov.sowa.schema.plugin.generators.config.ConstraintResolver;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -39,15 +40,17 @@ public class PathRegexResolver {
         } else if (clazz.isEnum()) {
             var values = ((Class<? extends Enum<?>>) clazz).getEnumConstants();
             return enumRegex(values);
+        } else if (ConstraintResolver.getNumberClass(resolvedType).isPresent()) {
+            return numberRegex();
         }
         return DEFAULT_REGEX;
     }
 
-    private static String uidRegex() {
+    public static String uidRegex() {
         return "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
     }
 
-    private static String enumRegex(Enum<? extends Enum<?>>[] values) {
+    public static String enumRegex(Enum<? extends Enum<?>>[] values) {
         var joiner = new StringJoiner("|", "(", ")");
         Arrays.stream(values)
                 .map(Enum::name)
@@ -56,5 +59,9 @@ public class PathRegexResolver {
                 .forEach(joiner::add);
 
         return joiner.toString();
+    }
+
+    public static String numberRegex() {
+        return "\\d+";
     }
 }

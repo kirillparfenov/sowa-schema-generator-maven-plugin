@@ -171,7 +171,7 @@ public final class ConstraintResolver {
      * @param type разрешенный тип для анализа
      * @return Optional с классом числового типа или empty если тип не поддерживается
      */
-    private static Optional<Class<?>> getNumberClass(ResolvedType type) {
+    public static Optional<Class<?>> getNumberClass(ResolvedType type) {
         if (
                 type.isInstanceOf(BigDecimal.class) || type.isInstanceOf(BigInteger.class)
                         || type.isInstanceOf(Character.class) || type.isInstanceOf(char.class)
@@ -241,6 +241,8 @@ public final class ConstraintResolver {
     }
 
     private static String resolveStringPatternByType(Class<?> clazz) {
-        return "^%s$".formatted(PathRegexResolver.getRegexOrDefault(clazz));
+        return clazz.isAssignableFrom(UUID.class)
+                ? "^%s$".formatted(PathRegexResolver.uidRegex())
+                : null;
     }
 } 

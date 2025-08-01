@@ -329,6 +329,8 @@ public class InfraExporter {
 
             var modifiedLines = lines.stream()
                     .map(line -> line.replace("'!include'", "!include"))
+                    .map(line -> line.replaceAll("/d\\+", "/\\\\d+"))
+                    .map(line -> line.replaceAll("\"", ""))
                     .collect(Collectors.toList());
 
             Files.write(yamlPath, modifiedLines, StandardCharsets.UTF_8);
