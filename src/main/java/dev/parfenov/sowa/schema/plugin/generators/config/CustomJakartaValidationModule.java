@@ -45,7 +45,7 @@ import static dev.parfenov.sowa.schema.plugin.generators.config.ValidationConsta
  * @see JakartaValidationModule Базовый модуль Jakarta валидации
  * @see ConstraintResolver Утилиты для разрешения ограничений
  * @see StringLengthCalculator Калькулятор длины строк
- * @since 2025
+ * @since 2025-08-03
  */
 public class CustomJakartaValidationModule extends JakartaValidationModule {
 
@@ -154,7 +154,7 @@ public class CustomJakartaValidationModule extends JakartaValidationModule {
      * @see ConstraintResolver#resolveNumericMaximum
      */
     private BigDecimal resolveNumberInclusiveMaximum(TypeScope typeScope) {
-        if (typeScope instanceof MemberScope<?,?> memberScope) {
+        if (typeScope instanceof MemberScope<?, ?> memberScope) {
             return resolveNumberInclusiveMaximum(memberScope);
         }
         return resolveNumericMaximum(typeScope.getType());
@@ -171,7 +171,7 @@ public class CustomJakartaValidationModule extends JakartaValidationModule {
      * @see ConstraintResolver#resolveNumericMinimum
      */
     private BigDecimal resolveNumberInclusiveMinimum(TypeScope typeScope) {
-        if (typeScope instanceof MemberScope<?,?> memberScope) {
+        if (typeScope instanceof MemberScope<?, ?> memberScope) {
             return resolveNumberInclusiveMinimum(memberScope);
         }
         return resolveNumericMinimum(typeScope.getType());

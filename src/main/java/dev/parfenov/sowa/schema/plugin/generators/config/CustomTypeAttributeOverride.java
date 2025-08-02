@@ -12,7 +12,7 @@ import com.github.victools.jsonschema.generator.TypeScope;
  * Переопределение атрибутов типов JSON схемы.
  *
  * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
- * @since 2025
+ * @since 2025-08-03
  */
 public class CustomTypeAttributeOverride implements TypeAttributeOverrideV2 {
 

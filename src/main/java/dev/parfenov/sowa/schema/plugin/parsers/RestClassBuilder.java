@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.parsers;
 
 import dev.parfenov.sowa.schema.plugin.git.DependencySearcher;
@@ -25,6 +20,9 @@ import java.util.Set;
  * <p>
  * Предоставляет удобный способ пошагового конструирования объектов
  * REST классов с обработкой основного класса и интерфейсов.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class RestClassBuilder {
 

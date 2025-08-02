@@ -20,7 +20,7 @@ import dev.parfenov.sowa.schema.plugin.parsers.TypesParser;
  *
  * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
  * @see CustomDefinitionProviderV2
- * @since 2025
+ * @since 2025-08-03
  */
 public class CustomVoidDefinitionProvider implements CustomDefinitionProviderV2 {
 

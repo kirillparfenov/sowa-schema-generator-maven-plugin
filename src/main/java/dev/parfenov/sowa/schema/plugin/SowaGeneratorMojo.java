@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin;
 
 import dev.parfenov.sowa.schema.plugin.exporters.DirectoriesBuilder;
@@ -27,6 +22,9 @@ import org.apache.maven.project.MavenProject;
  * <p>
  * Плагин анализирует классы REST контроллеров, извлекает информацию о типах запросов/ответов
  * и генерирует соответствующие JSON Schema файлы в формате Sowa.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 @Mojo(name = "generateSchema",
         defaultPhase = LifecyclePhase.COMPILE,

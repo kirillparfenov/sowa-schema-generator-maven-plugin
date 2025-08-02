@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.parsers.dto;
 
 import java.util.ArrayList;
@@ -13,6 +8,9 @@ import java.util.List;
  * <p>
  * Содержит информацию о классе контроллера включая его имя,
  * базовый путь эндпоинта и список методов.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class ClassModel {
     /**

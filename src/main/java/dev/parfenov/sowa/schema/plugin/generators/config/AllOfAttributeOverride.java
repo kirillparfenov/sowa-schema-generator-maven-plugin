@@ -34,7 +34,7 @@ import java.util.List;
  * </p>
  *
  * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
- * @since 2025
+ * @since 2025-08-03
  */
 public class AllOfAttributeOverride implements TypeAttributeOverrideV2 {
 
@@ -156,7 +156,7 @@ public class AllOfAttributeOverride implements TypeAttributeOverrideV2 {
      * @return список всех найденных непустых ObjectNode
      */
     private List<ObjectNode> collectNonEmptyObjects(JsonNode jsonNode) {
-         var nonEmptyObjects = new ArrayList<ObjectNode>();
+        var nonEmptyObjects = new ArrayList<ObjectNode>();
 
         if (jsonNode == null) {
             return nonEmptyObjects;

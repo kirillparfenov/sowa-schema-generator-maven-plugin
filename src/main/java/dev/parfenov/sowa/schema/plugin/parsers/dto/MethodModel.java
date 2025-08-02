@@ -1,21 +1,18 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.parsers.dto;
 
 import org.springframework.http.HttpMethod;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * DTO для представления метода REST контроллера.
  * <p>
  * Содержит всю необходимую информацию о методе включая типы запроса/ответа,
  * HTTP метод, путь эндпоинта и переменные пути.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class MethodModel {
     /**

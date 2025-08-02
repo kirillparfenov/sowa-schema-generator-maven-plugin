@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.git;
 
 import com.github.victools.jsonschema.generator.impl.LazyValue;
@@ -23,6 +18,9 @@ import java.util.stream.Collectors;
  * <p>
  * Предоставляет методы для получения списка измененных файлов
  * между текущей веткой и указанной базовой веткой.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class Git {
 

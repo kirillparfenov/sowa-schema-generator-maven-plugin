@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.parsers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +16,9 @@ import java.util.Properties;
  * Парсер конфигурационных файлов для извлечения настроек приложения.
  * Поддерживает парсинг файлов application.yml и application.properties
  * для получения контекстного пути сервлета.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public final class PropertiesParser {
 

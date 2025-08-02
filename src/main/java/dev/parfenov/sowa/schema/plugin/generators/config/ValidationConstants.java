@@ -6,7 +6,7 @@ package dev.parfenov.sowa.schema.plugin.generators.config;
  * Содержит предустановленные значения для ограничений валидации.
  *
  * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
- * @since 2025
+ * @since 2025-08-03
  */
 public final class ValidationConstants {
 

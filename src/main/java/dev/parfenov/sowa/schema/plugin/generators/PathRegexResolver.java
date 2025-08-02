@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.generators;
 
 import com.fasterxml.classmate.TypeResolver;
@@ -18,6 +13,9 @@ import java.util.UUID;
  * <p>
  * Предоставляет соответствие между Java классами и их regex представлениями
  * для валидации в путях URL.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class PathRegexResolver {
 

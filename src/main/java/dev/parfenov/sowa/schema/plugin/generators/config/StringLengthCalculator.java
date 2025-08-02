@@ -9,7 +9,7 @@ import static dev.parfenov.sowa.schema.plugin.generators.config.ValidationConsta
  * с округлением до ближайшего подходящего значения.
  *
  * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
- * @since 2025
+ * @since 2025-08-03
  */
 public final class StringLengthCalculator {
 

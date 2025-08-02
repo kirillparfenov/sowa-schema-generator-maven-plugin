@@ -7,6 +7,9 @@ import java.util.Set;
 
 /**
  * Request/Response сущность метода
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class Entity {
 

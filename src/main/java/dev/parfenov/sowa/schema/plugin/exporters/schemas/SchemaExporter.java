@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.exporters.schemas;
 
 import dev.parfenov.sowa.schema.plugin.exporters.DirectoriesBuilder;
@@ -20,6 +15,9 @@ import java.util.function.Predicate;
 /**
  * Экспортер JSON схем в файловую систему.
  * Отвечает за сохранение сгенерированных схем запросов и ответов в соответствующие директории.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class SchemaExporter {
 

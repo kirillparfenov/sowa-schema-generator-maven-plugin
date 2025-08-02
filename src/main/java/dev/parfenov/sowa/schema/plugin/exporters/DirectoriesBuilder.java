@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.exporters;
 
 import org.apache.maven.project.MavenProject;
@@ -21,6 +16,9 @@ import java.io.File;
  *       ├── response/    (схемы ответов)
  *       └── services.yml (роуты на схемы)
  * </pre>
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class DirectoriesBuilder {
 

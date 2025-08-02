@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.classloader;
 
 import dev.parfenov.sowa.schema.plugin.parsers.ClassParserConfig;
@@ -20,6 +15,9 @@ import java.util.List;
  * <p>
  * Создает ClassLoader с classpath элементами проекта и настраивает
  * ClassGraph для сканирования классов в указанном пакете.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class ClassLoader {
 

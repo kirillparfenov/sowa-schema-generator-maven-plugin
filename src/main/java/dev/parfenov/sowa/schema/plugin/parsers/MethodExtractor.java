@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.parsers;
 
 import dev.parfenov.sowa.schema.plugin.parsers.dto.PathVariableInfo;
@@ -25,6 +20,9 @@ import java.util.stream.Stream;
  * - переменных пути (@PathVariable)
  * - типов запросов (@RequestBody)
  * - типов ответов (возвращаемый тип метода)
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public final class MethodExtractor {
 
