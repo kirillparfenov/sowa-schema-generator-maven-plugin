@@ -27,6 +27,9 @@ import java.util.stream.Collectors;
  * </ul>
  * Все возвращаемые коллекции неизменяемы.
  * </p>
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public final class Extract {
 

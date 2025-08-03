@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.exporters.schemas;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -15,6 +10,9 @@ import java.io.IOException;
 /**
  * Утилитный класс для записи JSON файлов.
  * Обеспечивает безопасную запись JSON объектов в файловую систему с логированием.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class JsonFileWriter {
 

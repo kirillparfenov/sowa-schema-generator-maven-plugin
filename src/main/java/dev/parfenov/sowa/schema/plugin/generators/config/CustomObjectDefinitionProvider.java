@@ -18,7 +18,7 @@ import com.github.victools.jsonschema.generator.SchemaKeyword;
  *
  * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
  * @see CustomDefinitionProviderV2
- * @since 2025
+ * @since 2025-08-03
  */
 public class CustomObjectDefinitionProvider implements CustomDefinitionProviderV2 {
 

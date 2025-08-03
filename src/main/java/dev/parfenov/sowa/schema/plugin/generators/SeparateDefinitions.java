@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.generators;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,6 +20,9 @@ import java.util.Map;
  * <p>
  * Создает схемы где определения извлекаются в отдельные объекты,
  * а в основной схеме остаются только ссылки на них.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class SeparateDefinitions implements Generator {
 

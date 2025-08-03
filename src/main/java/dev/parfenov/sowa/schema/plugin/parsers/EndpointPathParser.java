@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.parsers;
 
 import dev.parfenov.sowa.schema.plugin.generators.PathRegexResolver;
@@ -18,6 +13,9 @@ import org.springframework.util.CollectionUtils;
  * <p>
  * Извлекает и обрабатывает пути из аннотаций Spring MVC,
  * разрешает переменные пути и формирует полные URL.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class EndpointPathParser {
 

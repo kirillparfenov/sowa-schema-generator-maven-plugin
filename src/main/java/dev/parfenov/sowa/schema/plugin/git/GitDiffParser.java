@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.git;
 
 import dev.parfenov.sowa.schema.plugin.parsers.dto.ClassModel;
@@ -25,6 +20,9 @@ import java.util.Set;
  *   <li>Для каждого метода проверяет, изменились ли связанные классы</li>
  *   <li>Обнуляет схемы для неизмененных типов</li>
  * </ul>
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class GitDiffParser {
 

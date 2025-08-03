@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.generators;
 
 import com.github.victools.jsonschema.generator.SchemaGenerator;
@@ -17,6 +12,9 @@ import java.util.List;
  * <p>
  * Создает схемы где все определения включены непосредственно в основную схему,
  * без выделения их в отдельные объекты.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class WithDefinitions implements Generator {
 

@@ -13,6 +13,10 @@ import java.lang.annotation.Annotation;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+/**
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
+ */
 public class CustomJacksonModule extends JacksonModule {
 
     static final Predicate<Annotation> NESTED_ANNOTATION_CHECK = annotation ->

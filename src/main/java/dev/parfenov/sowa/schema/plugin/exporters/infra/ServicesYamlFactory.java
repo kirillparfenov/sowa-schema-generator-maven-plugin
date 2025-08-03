@@ -13,6 +13,9 @@ import java.util.List;
 /**
  * Фабрика для создания объектов ServicesYaml и связанных с ними компонентов.
  * Инкапсулирует логику создания конфигурационных объектов для services.yml файла.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class ServicesYamlFactory {
 

@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.generators.sowa;
 
 import dev.parfenov.sowa.schema.plugin.generators.Generator;
@@ -21,6 +16,9 @@ import java.util.List;
  * <p>
  * Преобразует информацию о REST классах и их методах в схемы Sowa,
  * генерируя JSON Schema для типов запросов и ответов.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class SowaSchemaBuilder {
 

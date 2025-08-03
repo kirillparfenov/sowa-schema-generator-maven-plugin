@@ -33,7 +33,7 @@ import static dev.parfenov.sowa.schema.plugin.generators.config.ValidationConsta
  * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
  * @see Schema OpenAPI Schema аннотация
  * @see ValidationConstants Константы для валидации
- * @since 2025
+ * @since 2025-08-03
  */
 public final class ConstraintResolver {
 
@@ -241,7 +241,7 @@ public final class ConstraintResolver {
     }
 
     private static String resolveStringPatternByType(Class<?> clazz) {
-        return clazz.isAssignableFrom(UUID.class)
+        return UUID.class.isAssignableFrom(clazz)
                 ? "^%s$".formatted(PathRegexResolver.uidRegex())
                 : null;
     }

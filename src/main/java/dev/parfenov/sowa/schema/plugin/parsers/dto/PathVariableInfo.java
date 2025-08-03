@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.parsers.dto;
 
 import java.lang.reflect.Type;
@@ -12,6 +7,9 @@ import java.lang.reflect.Type;
  * <p>
  * Содержит имя переменной пути и её тип для дальнейшего
  * использования в генерации regex паттернов и валидации.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class PathVariableInfo {
     /**

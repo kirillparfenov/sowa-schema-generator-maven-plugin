@@ -29,6 +29,9 @@ import java.util.stream.Stream;
 /**
  * Экспортер инфраструктурных конфигураций SOWA.
  * Создает services.yml файл с настройками валидации схем для REST эндпоинтов.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class InfraExporter {
 

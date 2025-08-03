@@ -1,14 +1,12 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.generators;
 
 /**
  * Утилиты для работы с генератором JSON Schema.
  * <p>
  * Предоставляет вспомогательные методы для обработки ссылок и путей.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class GeneratorUtils {
 

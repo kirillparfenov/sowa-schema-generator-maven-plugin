@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.parsers;
 
 import dev.parfenov.sowa.schema.plugin.classloader.ClassLoader;
@@ -21,6 +16,9 @@ import java.util.List;
  * Анализирует классы с аннотациями @RestController и @Controller,
  * извлекает информацию о методах, путях эндпоинтов, параметрах запросов
  * и типах ответов для дальнейшей генерации схем.
+ *
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class ClassParser {
 
@@ -50,6 +48,7 @@ public class ClassParser {
      *
      * @return список проанализированных REST классов
      */
+    @SuppressWarnings({"unchecked"})
     public List<ClassModel> parseAllRestClasses() {
         try (var scanResult = classLoader.getClassgraph().scan()) {
             var restControllers = scanResult

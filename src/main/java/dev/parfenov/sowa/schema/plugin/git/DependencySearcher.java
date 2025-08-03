@@ -1,8 +1,3 @@
-/**
- * @author Kirill Parfenov
- * @see https://github.com/kirillparfenov
- * @since 2025
- */
 package dev.parfenov.sowa.schema.plugin.git;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -29,8 +24,8 @@ import java.util.*;
  *
  * <p>Класс является потокобезопасным.</p>
  *
- * @author Kirill Parfenov
- * @since 2025
+ * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
+ * @since 2025-08-03
  */
 public class DependencySearcher {
 
