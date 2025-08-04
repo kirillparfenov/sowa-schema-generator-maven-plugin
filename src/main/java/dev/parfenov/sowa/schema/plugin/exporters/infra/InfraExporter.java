@@ -72,7 +72,7 @@ public class InfraExporter {
         var filtered = canExportFilter(servicesYaml);
         filterById(filtered);
         exportYamlFile(filtered);
-        replaceSingleQuote();
+        postProcess();
     }
 
     /**
@@ -325,7 +325,7 @@ public class InfraExporter {
      * Удаляет одиночные кавычки вокруг '!include'.
      * Невозможно сделать это через наследование {@link YAMLMapper} или {@link Emitter}.
      */
-    private void replaceSingleQuote() {
+    private void postProcess() {
         try {
             var yamlPath = directoriesBuilder.servicesYamlFile().toPath();
             var lines = Files.readAllLines(yamlPath, StandardCharsets.UTF_8);
@@ -333,7 +333,11 @@ public class InfraExporter {
             var modifiedLines = lines.stream()
                     .map(line -> line.replace("'!include'", "!include"))
                     .map(line -> line.replaceAll("/d\\+", "/\\\\d+"))
-                    .map(line -> line.replaceAll("\"", ""))
+                    .map(line ->
+                            line.contains("operator:") || line.contains("pattern:")
+                                    ? line
+                                    : line.replaceAll("\"", "")
+                    )
                     .collect(Collectors.toList());
 
             Files.write(yamlPath, modifiedLines, StandardCharsets.UTF_8);
