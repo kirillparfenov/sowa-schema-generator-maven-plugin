@@ -31,7 +31,7 @@ import java.util.Map;
  * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
  * @since 2025-08-03
  */
-public class MapDefinitionProvider implements CustomDefinitionProviderV2, CustomPropertyDefinitionProvider<FieldScope> {
+public class CustomMapDefinitionProvider implements CustomDefinitionProviderV2, CustomPropertyDefinitionProvider<FieldScope> {
 
     /**
      * Предоставляет кастомное определение схемы для Map типов.
@@ -118,7 +118,7 @@ public class MapDefinitionProvider implements CustomDefinitionProviderV2, Custom
      * @return ObjectNode представляющий строго типизированную схему объекта
      */
     private ObjectNode enumSchema(EnumSet<?> enumValues, FieldScope field, SchemaGenerationContext context) {
-        var customSchema = context.getGeneratorConfig().createObjectNode();
+        var customSchema = anySchema(context);
         var propertiesNode = context.getGeneratorConfig().createObjectNode();
 
         customSchema.set(context.getKeyword(SchemaKeyword.TAG_PROPERTIES), propertiesNode);
