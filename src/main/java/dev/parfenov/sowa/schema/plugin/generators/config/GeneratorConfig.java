@@ -49,10 +49,10 @@ public class GeneratorConfig {
         configBuilder.with(new CustomJacksonModule(configBuilder.getObjectMapper()));
 
         //Поля
-        configBuilder.forFields().withCustomDefinitionProvider(new MapDefinitionProvider());
+        configBuilder.forFields().withCustomDefinitionProvider(new CustomMapDefinitionProvider());
 
         //Главная схема
-        configBuilder.forTypesInGeneral().withCustomDefinitionProvider(new MapDefinitionProvider());
+        configBuilder.forTypesInGeneral().withCustomDefinitionProvider(new CustomMapDefinitionProvider());
         configBuilder.forTypesInGeneral().withCustomDefinitionProvider(new CustomObjectDefinitionProvider());
         configBuilder.forTypesInGeneral().withCustomDefinitionProvider(new CustomVoidDefinitionProvider());
         configBuilder.forTypesInGeneral().withTypeAttributeOverride(new CustomTypeAttributeOverride());
