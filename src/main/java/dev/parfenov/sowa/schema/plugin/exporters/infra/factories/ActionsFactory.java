@@ -6,7 +6,6 @@ import dev.parfenov.sowa.schema.plugin.exporters.infra.ServicesYaml;
 import dev.parfenov.sowa.schema.plugin.parsers.TypesParser;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.ClassModel;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.MethodModel;
-import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
@@ -54,7 +53,7 @@ public class ActionsFactory {
      * @return действие для валидации запроса
      */
     public ServicesYaml.Action createRequestAction(ClassModel classModel, MethodModel method) {
-        var actions = method.getRequest().getType() == null || HttpMethod.GET.equals(method.getHttpMethod())
+        var actions = method.getRequest().getType() == null || TypesParser.isVoid(method.getRequest().getType())
                 ? Actions.CHECK_DATA_SIZE
                 : Actions.JSON_VALIDATION;
 

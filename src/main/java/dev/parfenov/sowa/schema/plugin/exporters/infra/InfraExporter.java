@@ -57,7 +57,9 @@ public class InfraExporter {
         }
 
         var servicesYaml = createServicesYaml(classModels);
-        var filtered = canExportFilter(servicesYaml);
+        var grouped = groupByUrl(new GroupBy(servicesFactory), servicesYaml);
+        var filtered = canExportFilter(grouped);
+        append4xxResponse(filtered);
         filterById(filtered);
         exportYamlFile(filtered);
         cleanQuotes();
@@ -70,7 +72,7 @@ public class InfraExporter {
      * @return список конфигураций сервисов
      */
     private List<ServicesYaml> createServicesYaml(List<ClassModel> classModels) {
-        var services = classModels.stream()
+        return classModels.stream()
                 .filter(Objects::nonNull)
                 .flatMap(restClass ->
                         restClass.getMethods()
@@ -79,8 +81,10 @@ public class InfraExporter {
                                 .map(method -> createServiceYaml(restClass, method))
                 )
                 .collect(Collectors.toList());
+    }
 
-        return new GroupBy(servicesFactory).url(services);
+    private List<ServicesYaml> groupByUrl(GroupBy groupBy, List<ServicesYaml> services) {
+        return groupBy.url(services);
     }
 
     /**
@@ -124,6 +128,13 @@ public class InfraExporter {
         return servicesYaml.stream()
                 .filter(ServicesYaml::isExport)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Прицепить обработку 4xx ответа
+     * */
+    private void append4xxResponse(List<ServicesYaml> servicesYaml) {
+        //todo закончить
     }
 
     /**

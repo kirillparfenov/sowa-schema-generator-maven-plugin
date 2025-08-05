@@ -78,7 +78,34 @@ public class GroupBy {
                 id,
                 url,
                 allowedQueries,
-                requestChains, responseChains
+                groupByMessage(requestChains),
+                groupByMessage(responseChains)
         );
+    }
+
+    /**
+     * Собирает все actions воедино, группируя по {@link ServicesYaml.Chain#getMessage()}
+     *
+     * @param chainList не сгруппированный список
+     * @return сгруппированный список
+     */
+    private List<ServicesYaml.Chain> groupByMessage(List<ServicesYaml.Chain> chainList) {
+        return chainList.stream()
+                .collect(Collectors.groupingBy(
+                        ServicesYaml.Chain::getMessage,
+                        Collectors.flatMapping(
+                                chain -> chain.getActions().stream(),
+                                Collectors.toList()
+                        )
+                ))
+                .entrySet()
+                .stream()
+                .map(entry -> {
+                    var chain = new ServicesYaml.Chain();
+                    chain.setMessage(entry.getKey());
+                    chain.setActions(entry.getValue());
+                    return chain;
+                })
+                .collect(Collectors.toList());
     }
 }

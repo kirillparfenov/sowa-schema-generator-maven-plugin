@@ -93,7 +93,7 @@ public class ChainsFactory {
     private List<ServicesYaml.Chain> createResponseChain(ClassModel classModel, MethodModel method) {
         return Optional
                 .ofNullable(create2xxResponse(classModel, method))
-                .map(this::append4xxAction)
+//                .map(this::append4xxAction)
                 .map(List::of)
                 .orElseGet(List::of);
     }
