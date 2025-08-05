@@ -40,6 +40,16 @@ public final class ValidationConstants {
      */
     public static final Integer LENGTH_BOUNDARY = 100;
 
+    /**
+     * Паттерн для ключа patternProperties
+     */
+    public static final String PATTERN_PROPERTIES_KEY = "^[a-zA-Zа-яА-Я0-9_]{1,255}$";
+
+    /**
+     * Максимальное значение количества properties в блоке patternProperties
+     */
+    public static final int MAX_PROPERTIES = 1000;
+
     private ValidationConstants() {
     }
 } 

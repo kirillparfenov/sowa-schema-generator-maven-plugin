@@ -48,15 +48,15 @@ public class GeneratorConfig {
         configBuilder.with(new CustomJakartaValidationModule(stringLengthIncreasePercent, JakartaValidationOption.INCLUDE_PATTERN_EXPRESSIONS));
         configBuilder.with(new CustomJacksonModule(configBuilder.getObjectMapper()));
 
-        //Поля
-        configBuilder.forFields().withCustomDefinitionProvider(new CustomMapDefinitionProvider());
-
         //Главная схема
-        configBuilder.forTypesInGeneral().withCustomDefinitionProvider(new CustomMapDefinitionProvider());
         configBuilder.forTypesInGeneral().withCustomDefinitionProvider(new CustomObjectDefinitionProvider());
         configBuilder.forTypesInGeneral().withCustomDefinitionProvider(new CustomVoidDefinitionProvider());
         configBuilder.forTypesInGeneral().withTypeAttributeOverride(new CustomTypeAttributeOverride());
+        configBuilder.forTypesInGeneral().withTypeAttributeOverride(new CustomTypeMapAttributeOverride());
         configBuilder.forTypesInGeneral().withTypeAttributeOverride(new AllOfAttributeOverride());
+
+        //Поля
+        configBuilder.forFields().withCustomDefinitionProvider(new CustomFieldMapDefinitionProvider());
 
         if (extractDefinitions) {
             configBuilder.with(Option.DEFINITION_FOR_MAIN_SCHEMA);

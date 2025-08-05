@@ -56,7 +56,9 @@ public class CustomJacksonModule extends JacksonModule {
         // @since 4.37.0 also consider overridden property name as it may match the getter method
         var fieldName = field.getName();
         // other kinds of field ignorals are handled implicitly, i.e. are only available by way of being absent
-        return beanDescription.findProperties().stream()
+        return beanDescription
+                .findProperties()
+                .stream()
                 .noneMatch(propertyDefinition ->
                         declaredName.equals(propertyDefinition.getInternalName())
                                 || fieldName.equals(propertyDefinition.getInternalName())
