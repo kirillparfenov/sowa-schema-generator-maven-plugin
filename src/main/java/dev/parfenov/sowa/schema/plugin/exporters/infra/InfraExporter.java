@@ -56,9 +56,8 @@ public class InfraExporter {
             return;
         }
 
-        var servicesYaml = createServicesYaml(classModels);
-        var grouped = groupByUrl(new GroupBy(servicesFactory), servicesYaml);
-        var filtered = canExportFilter(grouped);
+        var servicesYml = groupByUrl(new GroupBy(servicesFactory), createServicesYaml(classModels));
+        var filtered = canExportFilter(servicesYml);
         append4xxResponse(filtered);
         filterById(filtered);
         exportYamlFile(filtered);
@@ -134,7 +133,7 @@ public class InfraExporter {
      * Прицепить обработку 4xx ответа
      * */
     private void append4xxResponse(List<ServicesYaml> servicesYaml) {
-        //todo закончить
+        servicesFactory.append4xxResponse(servicesYaml);
     }
 
     /**

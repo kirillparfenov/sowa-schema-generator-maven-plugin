@@ -47,4 +47,8 @@ public class ServicesYamlFactory {
         serviceYaml.setChains(chainsFactory.createChains(classModel, method));
         return serviceYaml;
     }
+
+    public void append4xxResponse(List<ServicesYaml> servicesYaml) {
+        chainsFactory.append4xxAction(servicesYaml);
+    }
 }

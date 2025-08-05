@@ -137,15 +137,22 @@ public class ChainsFactory {
     /**
      * Добавляет действие обработки ошибок 4xx к существующей цепочке.
      *
-     * @param chain исходная цепочка
+     * @param servicesYaml массив конфигураций
      * @return цепочка с добавленным действием обработки 4xx ошибок
      */
-    private ServicesYaml.Chain append4xxAction(ServicesYaml.Chain chain) {
-        var chainActions = Stream
-                .of(chain.getActions(), List.of(actionsFactory.create4xxAction()))
+    public void append4xxAction(List<ServicesYaml> servicesYaml) {
+        servicesYaml.stream()
+                .map(ServicesYaml::getChains)
+                .map(ServicesYaml.Chains::getResponseChains)
+                .flatMap(Collection::stream)
+                .forEach(this::set4xxAction);
+    }
+
+    private void set4xxAction(ServicesYaml.Chain responseChain) {
+        var newActions = Stream
+                .of(responseChain.getActions(), List.of(actionsFactory.create4xxAction()))
                 .flatMap(Collection::stream)
                 .toList();
-        chain.setActions(chainActions);
-        return chain;
+        responseChain.setActions(newActions);
     }
 }
