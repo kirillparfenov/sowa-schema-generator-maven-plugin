@@ -12,13 +12,14 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
  * @since 2025-08-03
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"id", "name", "url", "description", "allowed_queries", "validators", "!include"})
+@JsonPropertyOrder({"id", "name", "url", "description", "allowed_queries", "chains", "!include"})
 public class ServicesYaml {
     //указывает необходимость экспорта
     @JsonIgnore
@@ -29,7 +30,7 @@ public class ServicesYaml {
     private String description;
     @JsonProperty("allowed_queries")
     private List<AllowedQuery> allowedQueries = new ArrayList<>();
-    private Validator validators;
+    private Chains chains;
     @JsonProperty("!include")
     private String include = "common_for_http_service.yml";
 
@@ -81,12 +82,12 @@ public class ServicesYaml {
         this.allowedQueries = allowedQueries;
     }
 
-    public Validator getValidators() {
-        return validators;
+    public Chains getChains() {
+        return chains;
     }
 
-    public void setValidators(Validator validators) {
-        this.validators = validators;
+    public void setChains(Chains chains) {
+        this.chains = chains;
     }
 
     public String getInclude() {
@@ -111,105 +112,165 @@ public class ServicesYaml {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class Validator {
-        @JsonProperty("validator_json")
-        private ValidatorJson validatorJson;
+    @JsonPropertyOrder({"request_chains", "response_chains"})
+    public static class Chains {
+        @JsonProperty("request_chains")
+        private List<Chain> requestChains;
 
-        public ValidatorJson getValidatorJson() {
-            return validatorJson;
+        @JsonProperty("response_chains")
+        private List<Chain> responseChains;
+
+        public List<Chain> getRequestChains() {
+            return requestChains;
         }
 
-        public void setValidatorJson(ValidatorJson validatorJson) {
-            this.validatorJson = validatorJson;
-        }
-    }
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonPropertyOrder({"request", "response"})
-    public static class ValidatorJson {
-        private List<RequestResponse> response;
-        private List<RequestResponse> request;
-
-        public List<RequestResponse> getResponse() {
-            return response;
+        public void setRequestChains(List<Chain> requestChains) {
+            this.requestChains = requestChains;
         }
 
-        public void setResponse(List<RequestResponse> response) {
-            this.response = response;
+        public List<Chain> getResponseChains() {
+            return responseChains;
         }
 
-        public List<RequestResponse> getRequest() {
-            return request;
-        }
-
-        public void setRequest(List<RequestResponse> request) {
-            this.request = request;
+        public void setResponseChains(List<Chain> responseChains) {
+            this.responseChains = responseChains;
         }
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonPropertyOrder({"method", "schema", "allow_empty_body", "response_code"})
-    public static class RequestResponse {
-        private String method;
-        private String schema;
-        @JsonProperty("allow_empty_body")
-        private boolean allowEmptyBody = true;
-        @JsonProperty("response_code")
-        private ResponseCode responseCode;
+    @JsonPropertyOrder({"message", "actions"})
+    public static class Chain {
+        private String message;
+        private List<Action> actions;
 
-        public String getMethod() {
-            return method;
+        public String getMessage() {
+            return message;
         }
 
-        public void setMethod(String method) {
-            this.method = method;
+        public void setMessage(String message) {
+            this.message = message;
         }
 
-        public String getSchema() {
-            return schema;
+        public List<Action> getActions() {
+            return actions;
         }
 
-        public void setSchema(String schema) {
-            this.schema = schema;
-        }
-
-        public boolean isAllowEmptyBody() {
-            return allowEmptyBody;
-        }
-
-        public void setAllowEmptyBody(boolean allowEmptyBody) {
-            this.allowEmptyBody = allowEmptyBody;
-        }
-
-        public ResponseCode getResponseCode() {
-            return responseCode;
-        }
-
-        public void setResponseCode(ResponseCode responseCode) {
-            this.responseCode = responseCode;
+        public void setActions(List<Action> actions) {
+            this.actions = actions;
         }
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonPropertyOrder({"operator", "pattern"})
-    public static class ResponseCode {
-        private char operator;
-        private String pattern;
+    @JsonPropertyOrder({"action", "conditions", "params"})
+    public static class Action {
+        private String action;
 
-        public char getOperator() {
+        private List<Condition> conditions;
+
+        private Param params;
+
+        public String getAction() {
+            return action;
+        }
+
+        public void setAction(String action) {
+            this.action = action;
+        }
+
+        public List<Condition> getConditions() {
+            return conditions;
+        }
+
+        public void setConditions(List<Condition> conditions) {
+            this.conditions = conditions;
+        }
+
+        public Param getParams() {
+            return params;
+        }
+
+        public void setParams(Param params) {
+            this.params = params;
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonPropertyOrder({"var", "operator", "val"})
+    public static class Condition {
+        private String var;
+        private String operator;
+        private String val;
+
+        public String getVar() {
+            return var;
+        }
+
+        public void setVar(String var) {
+            this.var = var;
+        }
+
+        public String getVal() {
+            return val;
+        }
+
+        public void setVal(String val) {
+            this.val = val;
+        }
+
+        public String getOperator() {
             return operator;
         }
 
-        public void setOperator(char operator) {
+        public void setOperator(String operator) {
             this.operator = operator;
         }
+    }
 
-        public String getPattern() {
-            return pattern;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class Param {
+        @JsonProperty("validation_schema")
+        private ValidationSchema validationSchema;
+
+        @JsonProperty("max_allowable_size")
+        private String maxAllowableSize;
+
+        public ValidationSchema getValidationSchema() {
+            return validationSchema;
         }
 
-        public void setPattern(String pattern) {
-            this.pattern = pattern;
+        public void setValidationSchema(ValidationSchema validationSchema) {
+            this.validationSchema = validationSchema;
+        }
+
+        public String getMaxAllowableSize() {
+            return maxAllowableSize;
+        }
+
+        public void setMaxAllowableSize(String maxAllowableSize) {
+            this.maxAllowableSize = maxAllowableSize;
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonPropertyOrder({"type", "path"})
+    public static class ValidationSchema {
+        private String type;
+        private String path;
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
         }
     }
 }

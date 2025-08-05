@@ -8,11 +8,11 @@ package dev.parfenov.sowa.schema.plugin.exporters.infra;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import dev.parfenov.sowa.schema.plugin.exporters.DirectoriesBuilder;
+import dev.parfenov.sowa.schema.plugin.exporters.infra.factories.ServicesYamlFactory;
 import dev.parfenov.sowa.schema.plugin.generators.NameGenerator;
 import dev.parfenov.sowa.schema.plugin.parsers.EndpointPathParser;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.ClassModel;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.MethodModel;
-import org.springframework.http.HttpMethod;
 import org.springframework.util.CollectionUtils;
 import org.yaml.snakeyaml.emitter.Emitter;
 
@@ -22,9 +22,7 @@ import java.nio.file.Files;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Экспортер инфраструктурных конфигураций SOWA.
@@ -36,25 +34,15 @@ import java.util.stream.Stream;
 public class InfraExporter {
 
     private static final String PROXY_PREFIX = "^/proxy";
-    private static final String SCHEMA_PREFIX = "schemes/json/";
-    private static final String JSON_SUFFIX = ".json";
-    private static final String REQUEST_PATH = "/request/";
-    private static final String RESPONSE_PATH = "/response/";
-    private static final String ERROR_RESPONSE_SCHEMA = "error_response_4XX.json";
-    private static final String SUCCESS_2XX_PATTERN = "^2\\d{2}$";
-    private static final String ERROR_4XX_PATTERN = "^4\\d{2}$";
-    private static final char REGEX_OPERATOR = '~';
 
-    private final InfraConfig infraConfig;
     private final EndpointPathParser endpointPathParser;
     private final DirectoriesBuilder directoriesBuilder;
     private final ServicesYamlFactory servicesFactory;
 
     public InfraExporter(final InfraConfig infraConfig) {
-        this.infraConfig = infraConfig;
         this.endpointPathParser = new EndpointPathParser(infraConfig.project());
         this.directoriesBuilder = infraConfig.directoriesBuilder();
-        this.servicesFactory = new ServicesYamlFactory();
+        this.servicesFactory = new ServicesYamlFactory(infraConfig);
     }
 
     /**
@@ -68,11 +56,12 @@ public class InfraExporter {
             return;
         }
 
-        var servicesYaml = createServicesYaml(classModels);
-        var filtered = canExportFilter(servicesYaml);
+        var servicesYml = groupByUrl(new GroupBy(servicesFactory), createServicesYaml(classModels));
+        var filtered = canExportFilter(servicesYml);
+        append4xxResponse(filtered);
         filterById(filtered);
         exportYamlFile(filtered);
-        postProcess();
+        cleanQuotes();
     }
 
     /**
@@ -82,7 +71,7 @@ public class InfraExporter {
      * @return список конфигураций сервисов
      */
     private List<ServicesYaml> createServicesYaml(List<ClassModel> classModels) {
-        var services = classModels.stream()
+        return classModels.stream()
                 .filter(Objects::nonNull)
                 .flatMap(restClass ->
                         restClass.getMethods()
@@ -91,8 +80,10 @@ public class InfraExporter {
                                 .map(method -> createServiceYaml(restClass, method))
                 )
                 .collect(Collectors.toList());
+    }
 
-        return new GroupBy(servicesFactory).url(services);
+    private List<ServicesYaml> groupByUrl(GroupBy groupBy, List<ServicesYaml> services) {
+        return groupBy.url(services);
     }
 
     /**
@@ -111,168 +102,8 @@ public class InfraExporter {
                 canExport,
                 schemaID,
                 fullPath,
-                getAllowedQueries(method),
-                createValidator(classModel, method)
+                classModel, method
         );
-    }
-
-    /**
-     * Создает валидатор для метода.
-     *
-     * @param classModel REST класс
-     * @param method     REST метод
-     * @return конфигурация валидатора
-     */
-    private ServicesYaml.Validator createValidator(ClassModel classModel, MethodModel method) {
-        var requests = createRequests(classModel, method);
-        var responses = createResponses(classModel, method);
-
-        var jsonValidator = servicesFactory.createValidatorJson(requests, responses);
-        return servicesFactory.createValidator(jsonValidator);
-    }
-
-    /**
-     * Формирует блок request/response.
-     *
-     * @param classModel REST класс
-     * @param method     REST метод
-     * @return список конфигураций запросов
-     */
-    private List<ServicesYaml.RequestResponse> createRequests(ClassModel classModel, MethodModel method) {
-        return Optional
-                .ofNullable(createSuccessRequest(classModel, method))
-                .map(List::of)
-                .orElseGet(List::of);
-    }
-
-    /**
-     * Создает блок с конфигурацией запроса
-     *
-     * @param classModel REST класс
-     * @param method     REST метод
-     * @return null, либо конфигурацию с запросом
-     */
-    private ServicesYaml.RequestResponse createSuccessRequest(ClassModel classModel, MethodModel method) {
-        if (method.getRequest().getType() == null || HttpMethod.GET.equals(method.getHttpMethod())) return null;
-
-        return servicesFactory.createRequestResponse(
-                getHttpMethodName(method),
-                buildRequestPath(classModel, method),
-                null
-        );
-    }
-
-    /**
-     * Создает конфигурации ответов (включая успешные и ошибочные).
-     *
-     * @param classModel REST класс
-     * @param method     REST метод
-     * @return список конфигураций ответов
-     */
-    private List<ServicesYaml.RequestResponse> createResponses(ClassModel classModel, MethodModel method) {
-        return Stream.of(
-                        create2xxResponse(classModel, method),
-                        create4xxResponse(method)
-                )
-                .filter(Objects::nonNull)
-                .toList();
-    }
-
-    /**
-     * Создает блок с конфигурацией 2XX ответа
-     *
-     * @param classModel REST класс
-     * @param method     REST метод
-     * @return null, либо конфигурацию с успешным ответом
-     */
-    private ServicesYaml.RequestResponse create2xxResponse(ClassModel classModel, MethodModel method) {
-        if (method.getResponse().getType() == null) return null;
-
-        var httpMethod = getHttpMethodName(method);
-        var schemaPath = buildResponsePath(classModel, method);
-        var successCode = servicesFactory.createResponseCode(REGEX_OPERATOR, SUCCESS_2XX_PATTERN);
-
-        return servicesFactory.createRequestResponse(
-                httpMethod,
-                schemaPath,
-                successCode
-        );
-    }
-
-    /**
-     * Создает блок с конфигурацией 4XX ответа
-     *
-     * @param method REST метод
-     * @return конфигурацию с 4XX ответом
-     */
-    private ServicesYaml.RequestResponse create4xxResponse(MethodModel method) {
-        var httpMethod = getHttpMethodName(method);
-        var errorSchemaPath = buildSchemaPath(RESPONSE_PATH, ERROR_RESPONSE_SCHEMA);
-        var errorCode = servicesFactory.createResponseCode(REGEX_OPERATOR, ERROR_4XX_PATTERN);
-
-        return servicesFactory.createRequestResponse(
-                httpMethod,
-                errorSchemaPath,
-                errorCode
-        );
-    }
-
-    /**
-     * Извлекает имя HTTP-метода и конвертирует его в String.lowerCase
-     *
-     * @param method метод контроллера
-     * @return название HTTP метода в нижнем регистре
-     */
-    private String getHttpMethodName(MethodModel method) {
-        return method.getHttpMethod().name().toLowerCase();
-    }
-
-    /**
-     * Создает список разрешенных запросов для метода.
-     *
-     * @param method REST метод
-     * @return список разрешенных запросов
-     */
-    private List<ServicesYaml.AllowedQuery> getAllowedQueries(MethodModel method) {
-        var allowedQuery = servicesFactory.createAllowedQuery(
-                method.getHttpMethod().name().toLowerCase()
-        );
-        return List.of(allowedQuery);
-    }
-
-    /**
-     * Строит полный путь до request-схемы
-     *
-     * @param classModel REST класс
-     * @param method     REST метод
-     * @return полный путь до request-схемы
-     */
-    private String buildRequestPath(ClassModel classModel, MethodModel method) {
-        var schemaName = NameGenerator.requestSchemaName(classModel, method);
-        return buildSchemaPath(REQUEST_PATH, schemaName + JSON_SUFFIX);
-    }
-
-    /**
-     * Строит полный путь до response-схемы
-     *
-     * @param classModel REST класс
-     * @param method     REST метод
-     * @return полный путь до response-схемы
-     */
-    private String buildResponsePath(ClassModel classModel, MethodModel method) {
-        var schemaName = NameGenerator.responseSchemaName(classModel, method);
-        return buildSchemaPath(RESPONSE_PATH, schemaName + JSON_SUFFIX);
-    }
-
-    /**
-     * Строит полный путь к схеме.
-     *
-     * @param destination папка назначения (/request/ или /response/)
-     * @param fileName    имя файла схемы
-     * @return полный путь к схеме
-     */
-    private String buildSchemaPath(String destination, String fileName) {
-        return SCHEMA_PREFIX + infraConfig.sowaProfileName() + destination + fileName;
     }
 
     /**
@@ -296,6 +127,13 @@ public class InfraExporter {
         return servicesYaml.stream()
                 .filter(ServicesYaml::isExport)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Прицепить обработку 4xx ответа
+     * */
+    private void append4xxResponse(List<ServicesYaml> servicesYaml) {
+        servicesFactory.append4xxResponse(servicesYaml);
     }
 
     /**
@@ -325,7 +163,7 @@ public class InfraExporter {
      * Удаляет одиночные кавычки вокруг '!include'.
      * Невозможно сделать это через наследование {@link YAMLMapper} или {@link Emitter}.
      */
-    private void postProcess() {
+    private void cleanQuotes() {
         try {
             var yamlPath = directoriesBuilder.servicesYamlFile().toPath();
             var lines = Files.readAllLines(yamlPath, StandardCharsets.UTF_8);
@@ -334,7 +172,7 @@ public class InfraExporter {
                     .map(line -> line.replace("'!include'", "!include"))
                     .map(line -> line.replaceAll("/d\\+", "/\\\\d+"))
                     .map(line ->
-                            line.contains("operator:") || line.contains("pattern:")
+                            line.contains("val:") || line.contains("operator:") || line.contains("max_allowable_size:")
                                     ? line
                                     : line.replaceAll("\"", "")
                     )
@@ -353,7 +191,6 @@ public class InfraExporter {
      */
     private YAMLMapper createYamlMapper() {
         return new YAMLMapper()
-                .configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true)
                 .configure(YAMLGenerator.Feature.ALLOW_LONG_KEYS, true)
                 .configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false);
     }

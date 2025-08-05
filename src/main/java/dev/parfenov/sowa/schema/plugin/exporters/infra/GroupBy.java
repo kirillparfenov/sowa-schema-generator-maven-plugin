@@ -5,8 +5,9 @@
  */
 package dev.parfenov.sowa.schema.plugin.exporters.infra;
 
+import dev.parfenov.sowa.schema.plugin.exporters.infra.factories.ServicesYamlFactory;
+
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -69,16 +70,42 @@ public class GroupBy {
         var id = Extract.id(services);
         var url = Extract.url(services);
         var allowedQueries = Extract.allowedQueries(services);
-        var request = Extract.requests(services);
-        var response = Extract.responses(services);
-        var validatorJson = servicesFactory.createValidatorJson(request, response);
+        var requestChains = Extract.requestsChain(services);
+        var responseChains = Extract.responsesChains(services);
 
         return servicesFactory.createService(
                 export,
                 id,
                 url,
                 allowedQueries,
-                servicesFactory.createValidator(validatorJson)
+                groupByMessage(requestChains),
+                groupByMessage(responseChains)
         );
+    }
+
+    /**
+     * Собирает все actions воедино, группируя по {@link ServicesYaml.Chain#getMessage()}
+     *
+     * @param chainList не сгруппированный список
+     * @return сгруппированный список
+     */
+    private List<ServicesYaml.Chain> groupByMessage(List<ServicesYaml.Chain> chainList) {
+        return chainList.stream()
+                .collect(Collectors.groupingBy(
+                        ServicesYaml.Chain::getMessage,
+                        Collectors.flatMapping(
+                                chain -> chain.getActions().stream(),
+                                Collectors.toList()
+                        )
+                ))
+                .entrySet()
+                .stream()
+                .map(entry -> {
+                    var chain = new ServicesYaml.Chain();
+                    chain.setMessage(entry.getKey());
+                    chain.setActions(entry.getValue());
+                    return chain;
+                })
+                .collect(Collectors.toList());
     }
 }

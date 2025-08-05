@@ -55,22 +55,22 @@ public final class Extract {
      * Извлекает валидаторы запросов из конфигураций.
      *
      * @param services Список конфигураций {@link ServicesYaml}.
-     * @return Список {@link ServicesYaml.RequestResponse} (пустой, если валидаторы отсутствуют).
+     * @return Список {@link ServicesYaml.Chain} (пустой, если валидаторы отсутствуют).
      * @throws NullPointerException если {@code services} равен {@code null}.
      */
-    public static List<ServicesYaml.RequestResponse> requests(List<ServicesYaml> services) {
-        return extractRequestResponse(services, ServicesYaml.ValidatorJson::getRequest);
+    public static List<ServicesYaml.Chain> requestsChain(List<ServicesYaml> services) {
+        return extractRequestResponse(services, ServicesYaml.Chains::getRequestChains);
     }
 
     /**
      * Извлекает валидаторы ответов из конфигураций.
      *
      * @param services Список конфигураций {@link ServicesYaml}.
-     * @return Список {@link ServicesYaml.RequestResponse} (пустой, если валидаторы отсутствуют).
+     * @return Список {@link ServicesYaml.Chain} (пустой, если валидаторы отсутствуют).
      * @throws NullPointerException если {@code services} равен {@code null}.
      */
-    public static List<ServicesYaml.RequestResponse> responses(List<ServicesYaml> services) {
-        return extractRequestResponse(services, ServicesYaml.ValidatorJson::getResponse);
+    public static List<ServicesYaml.Chain> responsesChains(List<ServicesYaml> services) {
+        return extractRequestResponse(services, ServicesYaml.Chains::getResponseChains);
     }
 
     /**
@@ -78,17 +78,16 @@ public final class Extract {
      *
      * @param services Список конфигураций {@link ServicesYaml}.
      * @param mapper   Функция-селектор ({@code getRequest} или {@code getResponse}).
-     * @return Список {@link ServicesYaml.RequestResponse}.
+     * @return Список {@link ServicesYaml.Chain}.
      * @throws NullPointerException если {@code services} или {@code mapper} равны {@code null}.
      */
-    private static List<ServicesYaml.RequestResponse> extractRequestResponse(
+    private static List<ServicesYaml.Chain> extractRequestResponse(
             List<ServicesYaml> services,
-            Function<ServicesYaml.ValidatorJson, List<ServicesYaml.RequestResponse>> mapper
+            Function<ServicesYaml.Chains, List<ServicesYaml.Chain>> mapper
     ) {
         return services
                 .stream()
-                .map(ServicesYaml::getValidators)
-                .map(ServicesYaml.Validator::getValidatorJson)
+                .map(ServicesYaml::getChains)
                 .map(mapper)
                 .filter(Predicate.not(CollectionUtils::isEmpty))
                 .flatMap(Collection::stream)
