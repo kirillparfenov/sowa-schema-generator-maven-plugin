@@ -47,6 +47,12 @@ public class MethodModel {
 
     /*-------------------------------------------------------*/
 
+    public String httpMethodName() {
+        return httpMethod.name();
+    }
+
+    /*-------------------------------------------------------*/
+
     public String getName() {
         return name;
     }
