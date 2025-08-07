@@ -18,7 +18,7 @@ public final class ValidationConstants {
     /**
      * Максимальная длина строки по умолчанию
      */
-    public static final Integer DEFAULT_STRING_MAX_LENGTH = 300;
+    public static final Integer DEFAULT_STRING_MAX_LENGTH = 255;
 
     /**
      * Максимальная длина UUID

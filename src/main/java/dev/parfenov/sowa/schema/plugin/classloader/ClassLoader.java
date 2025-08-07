@@ -57,8 +57,8 @@ public class ClassLoader {
      *
      * @return базовый пакет проекта для сканирования
      */
-    public String baseProjectPackage() {
-        return config.projectBasePackage();
+    public String[] baseProjectPackages() {
+        return config.projectBasePackages();
     }
 
     /**
@@ -70,7 +70,7 @@ public class ClassLoader {
         return new ClassGraph()
                 .overrideClasspath(getClasspathElements())
                 .overrideClassLoaders(getClassLoader())
-                .acceptPackages(baseProjectPackage())
+                .acceptPackages(baseProjectPackages())
                 .enableInterClassDependencies()
                 .enableAllInfo();
     }

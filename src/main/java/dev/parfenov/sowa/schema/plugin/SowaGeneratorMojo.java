@@ -55,7 +55,7 @@ public class SowaGeneratorMojo extends AbstractMojo {
     /**
      * Флаг для извлечения определений в отдельные файлы
      */
-    @Parameter(property = "extractDefinitions", required = true)
+    @Parameter(property = "extractDefinitions")
     private boolean extractDefinitions;
 
     /**
@@ -65,10 +65,10 @@ public class SowaGeneratorMojo extends AbstractMojo {
     private int stringLengthIncreasePercent;
 
     /**
-     * Базовый пакет проекта для сканирования классов
+     * Базовые пакеты проекта для сканирования классов
      */
-    @Parameter(property = "projectPackage", required = true)
-    private String projectPackage;
+    @Parameter(property = "projectPackages", required = true)
+    private String[] projectPackages;
 
     /**
      * Объект Maven проекта
@@ -86,7 +86,7 @@ public class SowaGeneratorMojo extends AbstractMojo {
      */
     @Override
     public synchronized void execute() {
-        var parserConfig = new ClassParserConfig(project, projectPackage, onlyGitDiff, branchDiffWith);
+        var parserConfig = new ClassParserConfig(project, projectPackages, onlyGitDiff, branchDiffWith);
         var restControllers = new ClassParser(parserConfig).parseAllRestClasses();
 
         var generator = GeneratorStrategy.getGenerator(new GeneratorConfig(extractDefinitions, stringLengthIncreasePercent));

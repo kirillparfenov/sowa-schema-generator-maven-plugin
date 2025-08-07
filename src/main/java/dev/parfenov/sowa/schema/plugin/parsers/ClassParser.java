@@ -1,13 +1,14 @@
 package dev.parfenov.sowa.schema.plugin.parsers;
 
 import dev.parfenov.sowa.schema.plugin.classloader.ClassLoader;
-import dev.parfenov.sowa.schema.plugin.git.GitDiffParser;
 import dev.parfenov.sowa.schema.plugin.git.DependencySearcher;
+import dev.parfenov.sowa.schema.plugin.git.GitDiffParser;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.ClassModel;
 import io.github.classgraph.ClassInfo;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -57,7 +58,7 @@ public class ClassParser {
                     .stream()
                     .toList();
 
-            var dependencySearcher = new DependencySearcher(scanResult);
+            var dependencySearcher = new DependencySearcher(scanResult, this);
             return restControllers.stream()
                     .map(classInfo -> parseRestController(classInfo, dependencySearcher))
                     .peek(gitDiffParser::diff)
@@ -70,14 +71,15 @@ public class ClassParser {
     /**
      * Проверяет, принадлежит ли класс к пакету проекта.
      *
-     * @param controllerClass информация о классе контроллера
+     * @param classInfo информация о классе
      * @return true если класс в пакете проекта
      */
-    private boolean isProjectPackage(ClassInfo controllerClass) {
-        return controllerClass
-                .getPackageInfo()
-                .getName()
-                .startsWith(classLoader.baseProjectPackage());
+    public boolean isProjectPackage(ClassInfo classInfo) {
+        return Arrays
+                .stream(classLoader.baseProjectPackages())
+                .anyMatch(packageName ->
+                        classInfo.getPackageName().startsWith(packageName)
+                );
     }
 
     /**
