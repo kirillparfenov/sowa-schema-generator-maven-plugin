@@ -26,8 +26,11 @@ Maven плагин для автоматической генерации JSON �
     <artifactId>sowa-schema-generator-maven-plugin</artifactId>
     <version>1.0.0</version>
     <configuration>
-        <sowaProfileName>gigacensor</sowaProfileName>
-        <projectPackage>dev.parfenov.sowa.schema.generator</projectPackage>
+        <sowaProfileName>super_profile_name</sowaProfileName>
+        <projectPackages>
+            <projectPackage>dev.parfenov.sowa.schema.generator</projectPackage>
+            <projectPackage>common.dto</projectPackage>
+        </projectPackages>
         <extractDefinitions>false</extractDefinitions>
         <onlyGitDiff>false</onlyGitDiff>
         <branchDiffWith>origin/main</branchDiffWith>
@@ -55,14 +58,14 @@ mvn compile
 
 ## Параметры конфигурации
 
-| Параметр | Описание | Тип | Обязательный | Значение по умолчанию | Возможные значения |
-|----------|----------|-----|--------------|----------------------|-------------------|
-| `sowaProfileName` | Имя профиля SOWA для генерации инфраструктурных файлов | String | Нет | `SOWA_PROFILE_NAME` | Любое строковое значение |
-| `projectPackage` | Базовый пакет проекта для поиска REST контроллеров | String | **Да** | - | Полное имя пакета (например, `com.example.project`) |
-| `extractDefinitions` | Извлекать ли определения схем в отдельную секцию | Boolean | **Да** | - | `true` / `false` |
-| `onlyGitDiff` | Обрабатывать только файлы, измененные в Git | Boolean | Нет | `false` | `true` / `false` |
-| `branchDiffWith` | Ветка для сравнения изменений при использовании `onlyGitDiff` | String | Нет | `origin/develop` | Любое имя ветки Git |
-| `stringLengthIncreasePercent` | Процент увеличения длины строковых полей в схемах | Integer | Нет | - | Положительное целое число |
+| Параметр                      | Описание                                                          | Тип | Обязательный | Значение по умолчанию | Возможные значения |
+|-------------------------------|-------------------------------------------------------------------|-----|--------------|-----------------------|-------------------|
+| `sowaProfileName`             | Имя профиля SOWA для генерации инфраструктурных файлов            | String | Нет          | `SOWA_PROFILE_NAME`   | Любое строковое значение |
+| `projectPackages`             | Базовые пакет проекта для поиска REST контроллеров и доп. классов | String | **Да**       | -                     | Полное имя пакета (например, `com.example.project`) |
+| `extractDefinitions`          | Извлекать ли определения схем в отдельную секцию                  | Boolean | Нет          | `false`               | `true` / `false` |
+| `onlyGitDiff`                 | Обрабатывать только файлы, измененные в Git                       | Boolean | Нет          | `false`               | `true` / `false` |
+| `branchDiffWith`              | Ветка для сравнения изменений при использовании `onlyGitDiff`     | String | Нет          | `origin/develop`      | Любое имя ветки Git |
+| `stringLengthIncreasePercent` | Процент увеличения длины строковых полей в схемах                 | Integer | Нет          | 0                     | Положительное целое число |
 
 ## Примеры
 
@@ -71,7 +74,10 @@ mvn compile
 ```xml
 <configuration>
     <projectPackage>com.example.myapp</projectPackage>
-    <extractDefinitions>false</extractDefinitions>
+    <projectPackages>
+        <projectPackage>dev.parfenov.sowa.schema.generator</projectPackage>
+        <projectPackage>common.dto</projectPackage>
+    </projectPackages>
 </configuration>
 ```
 
@@ -80,9 +86,12 @@ mvn compile
 ```xml
 <configuration>
     <projectPackage>com.example.myapp</projectPackage>
-    <extractDefinitions>true</extractDefinitions>
+    <projectPackages>
+        <projectPackage>dev.parfenov.sowa.schema.generator</projectPackage>
+        <projectPackage>common.dto</projectPackage>
+    </projectPackages>
     <onlyGitDiff>true</onlyGitDiff>
-    <branchDiffWith>origin/develop</branchDiffWith>
+    <branchDiffWith>origin/main</branchDiffWith>
 </configuration>
 ```
 
@@ -91,7 +100,10 @@ mvn compile
 ```xml
 <configuration>
     <projectPackage>com.example.myapp</projectPackage>
-    <extractDefinitions>false</extractDefinitions>
+    <projectPackages>
+        <projectPackage>dev.parfenov.sowa.schema.generator</projectPackage>
+        <projectPackage>common.dto</projectPackage>
+    </projectPackages>
     <stringLengthIncreasePercent>15</stringLengthIncreasePercent>
 </configuration>
 ```
@@ -133,7 +145,6 @@ public class ExampleDefault {
 @Getter
 @Setter
 public class ExampleSubTypes {
-    @JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS)
     @JsonSubTypes({
             @JsonSubTypes.Type(value = SubType1.class),
             @JsonSubTypes.Type(value = SubType2.class),
@@ -149,7 +160,6 @@ public class ExampleSubTypes {
 Аналогично, вы можете использовать те же аннотации на интерфейсах для указания конкретных типов реализаций:
 
 ```java
-@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = SubType1.class),
         @JsonSubTypes.Type(value = SubType2.class),

@@ -84,7 +84,7 @@ public final class ConstraintResolver {
         }
 
         // Определяем длину по типу
-        return getDefaultLengthForType(member);
+        return getDefaultLengthForType(member, lengthCalculator);
     }
 
     /**
@@ -99,9 +99,9 @@ public final class ConstraintResolver {
      * @param member область видимости члена класса, не null
      * @return длина по умолчанию для типа, или null если тип не поддерживается
      */
-    private static Integer getDefaultLengthForType(MemberScope<?, ?> member) {
+    private static Integer getDefaultLengthForType(MemberScope<?, ?> member, StringLengthCalculator lengthCalculator) {
         if (member.getType().isInstanceOf(CharSequence.class)) {
-            return DEFAULT_STRING_MAX_LENGTH;
+            return lengthCalculator.increaseLength(DEFAULT_STRING_MAX_LENGTH);
         }
 
         if (member.getType().isInstanceOf(UUID.class)) {

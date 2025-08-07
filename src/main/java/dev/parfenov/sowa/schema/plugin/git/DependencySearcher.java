@@ -1,6 +1,7 @@
 package dev.parfenov.sowa.schema.plugin.git;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import dev.parfenov.sowa.schema.plugin.parsers.ClassParser;
 import io.github.classgraph.*;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -34,14 +35,17 @@ public class DependencySearcher {
      */
     private final ScanResult scanResult;
 
+    private final ClassParser classParser;
+
     /**
      * Создает новый экземпляр DependencySearcher.
      *
      * @param scanResult результат сканирования classpath (не может быть null)
      * @throws IllegalArgumentException если scanResult равен null
      */
-    public DependencySearcher(ScanResult scanResult) {
+    public DependencySearcher(ScanResult scanResult, ClassParser classParser) {
         this.scanResult = scanResult;
+        this.classParser = classParser;
     }
 
     /**
@@ -198,9 +202,13 @@ public class DependencySearcher {
      * @param dependencies множество для сбора зависимостей (не может быть null)
      */
     void collectSuperClass(ClassInfo classInfo, Set<String> dependencies) {
+        var superRef = classInfo.getTypeSignatureOrTypeDescriptor().getSuperclassSignature();
+        if (superRef != null) {
+            dfs(superRef, dependencies);
+        }
+
         for (var superClass : classInfo.getSuperclasses()) {
-            var ref = superClass.getTypeSignatureOrTypeDescriptor().getSuperclassSignature();
-            dfs(ref, dependencies);
+            collectSuperClass(superClass, dependencies);
         }
     }
 
@@ -237,7 +245,9 @@ public class DependencySearcher {
      * @param allTypesInfo список для сбора информации о классах (не может быть null)
      */
     void recursiveCollectCLassInfo(ClassInfo root, List<TypeArgument> arguments, List<ClassInfo> allTypesInfo) {
-        allTypesInfo.add(root);
+        if (classParser.isProjectPackage(root)) {
+            allTypesInfo.add(root);
+        }
         for (var typeArgument : arguments) {
             if (typeArgument.getTypeSignature() instanceof ClassRefTypeSignature ref) {
                 recursiveCollectCLassInfo(ref.getClassInfo(), ref.getTypeArguments(), allTypesInfo);
