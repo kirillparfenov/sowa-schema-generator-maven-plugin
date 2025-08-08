@@ -1,11 +1,13 @@
 package dev.parfenov.sowa.schema.plugin.parsers;
 
 import dev.parfenov.sowa.schema.plugin.parsers.dto.PathVariableInfo;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
@@ -63,7 +65,25 @@ public final class MethodExtractor {
      * @return тип ответа метода
      */
     public static Type extractResponse(Method method) {
-        return method.getGenericReturnType();
+        try {
+            return unwrapResponseEntity(method.getGenericReturnType());
+        } catch (Exception e) {
+            System.out.println("Ошибка получения genericType: " + e.getMessage());
+            return Void.class;
+        }
+    }
+
+    /**
+     * Извлекает тип из {@link ResponseEntity}, при его наличии
+     *
+     * @param response ответ метода
+     * @return очищенный тип от {@link ResponseEntity}
+     */
+    private static Type unwrapResponseEntity(Type response) {
+        return response instanceof ParameterizedType parameterizedType
+                && parameterizedType.getRawType().equals(ResponseEntity.class)
+                ? parameterizedType.getActualTypeArguments()[0]
+                : response;
     }
 
     /**
