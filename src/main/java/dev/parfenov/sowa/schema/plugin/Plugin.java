@@ -19,7 +19,7 @@ import java.util.List;
  * Обеспечивает объединение всех компонентов системы: парсинга, генерации и экспорта.
  *
  * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
- * @since 2025-08-03
+ * @since 2025-08-10
  */
 public class Plugin {
 
@@ -91,16 +91,6 @@ public class Plugin {
     private void exportResults(List<ClassModel> restControllers) {
         new SchemaExporter(new ExportConfig(directoriesBuilder, log)).export(restControllers);
         new InfraExporter(infraConfig).export(restControllers);
-    }
-
-    /**
-     * Точка входа для автономного запуска плагина.
-     * Используется для тестирования и отладки вне Maven контекста.
-     *
-     * @param args аргументы командной строки (не используются)
-     */
-    public static void main(String[] args) {
-        ConfigurationFactory.createStandalonePluginFromSystemProperties().start();
     }
 
     /**

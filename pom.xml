@@ -109,8 +109,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-<!--                            <addClasspath>true</addClasspath>-->
-                            <mainClass>dev.parfenov.sowa.schema.plugin.Plugin</mainClass>
+                            <mainClass>dev.parfenov.sowa.schema.plugin.CLI</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
