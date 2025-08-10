@@ -23,7 +23,7 @@ import org.apache.maven.project.MavenProject;
         requiresDependencyCollection = ResolutionScope.COMPILE_PLUS_RUNTIME,
         threadSafe = true
 )
-public class SowaGeneratorMojo extends AbstractMojo {
+public class SowaMaven extends AbstractMojo {
 
     /**
      * Имя профиля Sowa для конфигурации инфраструктуры

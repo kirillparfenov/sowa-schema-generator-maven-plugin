@@ -5,8 +5,10 @@ import dev.parfenov.sowa.schema.plugin.exporters.DirectoriesBuilder;
 import dev.parfenov.sowa.schema.plugin.parsers.PropertiesParser;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
+import org.gradle.api.Project;
 import org.springframework.util.Assert;
 
+import java.io.File;
 import java.util.Arrays;
 
 /**
@@ -42,6 +44,7 @@ public final class ConfigurationFactory {
                                                             String contextPath) {
         return new ClassParserConfig(
                 project,
+                null,
                 projectPackages,
                 onlyGitDiff,
                 branchDiffWith,
@@ -67,6 +70,7 @@ public final class ConfigurationFactory {
                                                                  String contextPath) {
         return new ClassParserConfig(
                 null,
+                null,
                 packages,
                 onlyGitDiff,
                 branchDiffWith,
@@ -91,16 +95,14 @@ public final class ConfigurationFactory {
      * Создает конфигурацию инфраструктуры.
      *
      * @param directoriesBuilder построитель директорий
-     * @param project            Maven проект (может быть null для автономного запуска)
      * @param sowaProfileName    имя профиля Sowa
      * @param contextPath        контекстный путь сервлета
      * @return конфигурация инфраструктуры
      */
     public static InfraConfig createInfraConfig(DirectoriesBuilder directoriesBuilder,
-                                                MavenProject project,
                                                 String sowaProfileName,
                                                 String contextPath) {
-        return new InfraConfig(directoriesBuilder, project, sowaProfileName, contextPath);
+        return new InfraConfig(directoriesBuilder, sowaProfileName, contextPath);
     }
 
     /**
@@ -131,10 +133,84 @@ public final class ConfigurationFactory {
         );
 
         var generatorConfig = createGeneratorConfig(extractDefinitions, stringLengthIncreasePercent);
-        var directoriesBuilder = new DirectoriesBuilder();
-        var infraConfig = createInfraConfig(directoriesBuilder, project, sowaProfileName, contextPath);
+        var directoriesBuilder = new DirectoriesBuilder(new File(project.getBuild().getDirectory()));
+        var infraConfig = createInfraConfig(directoriesBuilder, sowaProfileName, contextPath);
 
         return new Plugin(parserConfig, generatorConfig, directoriesBuilder, infraConfig, log);
+    }
+
+    /**
+     * Создает экземпляр Plugin для Gradle контекста.
+     *
+     * @param project                     Gradle проект
+     * @param projectPackages             пакеты для сканирования
+     * @param onlyGitDiff                 флаг обработки только git изменений
+     * @param branchDiffWith              ветка для сравнения
+     * @param extractDefinitions          флаг извлечения определений
+     * @param stringLengthIncreasePercent процент увеличения длины строк
+     * @param sowaProfileName             имя профиля Sowa
+     * @param log                         логгер Gradle
+     * @return настроенный экземпляр Plugin
+     */
+    public static Plugin createGradlePlugin(Project project,
+                                            String[] projectPackages,
+                                            boolean onlyGitDiff,
+                                            String branchDiffWith,
+                                            boolean extractDefinitions,
+                                            int stringLengthIncreasePercent,
+                                            String sowaProfileName,
+                                            Log log) {
+        var contextPath = PropertiesParser.contextPath(project.getProjectDir());
+
+        var parserConfig = createGradleParserConfig(
+                project, projectPackages, onlyGitDiff, branchDiffWith, contextPath
+        );
+
+        var generatorConfig = createGeneratorConfig(extractDefinitions, stringLengthIncreasePercent);
+        var directoriesBuilder = new DirectoriesBuilder(project.getBuildDir());
+        var infraConfig = createGradleInfraConfig(directoriesBuilder, sowaProfileName, contextPath);
+
+        return new Plugin(parserConfig, generatorConfig, directoriesBuilder, infraConfig, log);
+    }
+
+    /**
+     * Создает конфигурацию парсера классов для Gradle контекста.
+     *
+     * @param project         Gradle проект
+     * @param projectPackages пакеты для сканирования
+     * @param onlyGitDiff     флаг обработки только git изменений
+     * @param branchDiffWith  ветка для сравнения
+     * @param contextPath     контекстный путь сервлета
+     * @return конфигурация парсера
+     */
+    private static ClassParserConfig createGradleParserConfig(Project project,
+                                                              String[] projectPackages,
+                                                              boolean onlyGitDiff,
+                                                              String branchDiffWith,
+                                                              String contextPath) {
+        return new ClassParserConfig(
+                null,
+                project,
+                projectPackages,
+                onlyGitDiff,
+                branchDiffWith,
+                null,
+                contextPath
+        );
+    }
+
+    /**
+     * Создает конфигурацию инфраструктуры для Gradle контекста.
+     *
+     * @param directoriesBuilder построитель директорий
+     * @param sowaProfileName    имя профиля Sowa
+     * @param contextPath        контекстный путь сервлета
+     * @return конфигурация инфраструктуры
+     */
+    private static InfraConfig createGradleInfraConfig(DirectoriesBuilder directoriesBuilder,
+                                                       String sowaProfileName,
+                                                       String contextPath) {
+        return new InfraConfig(directoriesBuilder, sowaProfileName, contextPath);
     }
 
     /**
@@ -163,8 +239,8 @@ public final class ConfigurationFactory {
         );
 
         var generatorConfig = createGeneratorConfig(extractDefinitions, stringLengthIncreasePercent);
-        var directoriesBuilder = new DirectoriesBuilder();
-        var infraConfig = createInfraConfig(directoriesBuilder, null, sowaProfileName, contextPath);
+        var directoriesBuilder = new DirectoriesBuilder(new File("sowa-build"));
+        var infraConfig = createInfraConfig(directoriesBuilder, sowaProfileName, contextPath);
 
         return new Plugin(parserConfig, generatorConfig, directoriesBuilder, infraConfig, null);
     }

@@ -89,7 +89,9 @@ public class ClassLoader {
             if (config.project() != null) {
                 classpathElements.addAll(config.project().getRuntimeClasspathElements());
                 classpathElements.addAll(config.project().getCompileClasspathElements());
-            } else if(config.uberJarLink() != null) {
+            } else if (config.gradleProject() != null) {
+                classpathElements.addAll(getGradleClasspathElements());
+            } else if (config.uberJarLink() != null) {
                 classpathElements.add(config.uberJarLink());
             }
             var urls = new ArrayList<URL>(classpathElements.size());
@@ -101,5 +103,67 @@ public class ClassLoader {
         } catch (Exception e) {
             throw new RuntimeException("Ошибка во время получения classpath элементов", e);
         }
+    }
+
+    /**
+     * Получает все зависимости проекта (runtime + compile) для Gradle.
+     *
+     * @return список путей к JAR файлам зависимостей
+     */
+    private List<String> getGradleClasspathElements() {
+        var classpathElements = new ArrayList<String>();
+
+        try {
+            // Получаем runtime classpath
+            var runtimeConfiguration = config.gradleProject().getConfigurations().findByName("runtimeClasspath");
+            if (runtimeConfiguration != null) {
+                runtimeConfiguration.getResolvedConfiguration().getResolvedArtifacts()
+                        .forEach(artifact -> {
+                            String path = artifact.getFile().getAbsolutePath();
+                            if (!classpathElements.contains(path)) {
+                                classpathElements.add(path);
+                            }
+                        });
+            }
+
+            // Получаем compile classpath
+            var compileConfiguration = config.gradleProject().getConfigurations().findByName("compileClasspath");
+            if (compileConfiguration != null) {
+                compileConfiguration.getResolvedConfiguration().getResolvedArtifacts()
+                        .forEach(artifact -> {
+                            String path = artifact.getFile().getAbsolutePath();
+                            if (!classpathElements.contains(path)) {
+                                classpathElements.add(path);
+                            }
+                        });
+            }
+
+            // Добавляем скомпилированные классы проекта
+            var compileJavaTask = config.gradleProject().getTasks().findByName("compileJava");
+            if (compileJavaTask != null) {
+                compileJavaTask.getOutputs().getFiles().forEach(file -> {
+                    String path = file.getAbsolutePath();
+                    if (!classpathElements.contains(path)) {
+                        classpathElements.add(path);
+                    }
+                });
+            }
+
+            // Добавляем resources директорию
+            var processResourcesTask = config.gradleProject().getTasks().findByName("processResources");
+            if (processResourcesTask != null) {
+                processResourcesTask.getOutputs().getFiles().forEach(file -> {
+                    String path = file.getAbsolutePath();
+                    if (!classpathElements.contains(path)) {
+                        classpathElements.add(path);
+                    }
+                });
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка при получении classpath элементов", e);
+        }
+
+        return classpathElements;
     }
 }
