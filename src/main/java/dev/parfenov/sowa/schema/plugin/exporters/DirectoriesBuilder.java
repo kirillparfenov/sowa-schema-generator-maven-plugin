@@ -23,14 +23,16 @@ import java.util.Optional;
  */
 public class DirectoriesBuilder {
 
-    private static final String BASE_DIR = "sowa-build";
     private static final String SOWA_DIRECTORY = File.separator + "sowa";
     private static final String REQUEST_DIRECTORY = File.separator + "request";
     private static final String RESPONSE_DIRECTORY = File.separator + "response";
     private static final String INFRASTRUCTURE_DIRECTORY = "";
     private static final String SERVICES_YML = "services.yml";
 
-    public DirectoriesBuilder() {
+    private final File baseDir;
+
+    public DirectoriesBuilder(File baseDir) {
+        this.baseDir = baseDir;
     }
 
     /**
@@ -91,7 +93,7 @@ public class DirectoriesBuilder {
      * @return основная директория sowa
      */
     private File sowaDir() {
-        return buildDir(new File(BASE_DIR), SOWA_DIRECTORY);
+        return buildDir(baseDir, SOWA_DIRECTORY);
     }
 
     /**
@@ -104,7 +106,9 @@ public class DirectoriesBuilder {
      */
     private File buildDir(File parentDir, String newDirName) {
         var dir = new File(parentDir, newDirName);
-        dir.mkdirs();
+        if (dir.mkdirs()) {
+            System.out.println("Создана директория: " + dir.getAbsolutePath());
+        }
         return dir;
     }
 }
