@@ -1,6 +1,7 @@
 # SOWA Schema Generator Maven Plugin
 
 [![Java CI with Maven](https://github.com/kirillparfenov/sowa-schema-generator-maven-plugin/actions/workflows/maven.yml/badge.svg)](https://github.com/kirillparfenov/sowa-schema-generator-maven-plugin/actions/workflows/maven.yml)
+[![CodeQL Advanced](https://github.com/kirillparfenov/sowa-schema-generator-maven-plugin/actions/workflows/codeql.yml/badge.svg)](https://github.com/kirillparfenov/sowa-schema-generator-maven-plugin/actions/workflows/codeql.yml)
 
 Maven плагин для автоматической генерации JSON схем из Spring REST контроллеров для системы SOWA.
 
