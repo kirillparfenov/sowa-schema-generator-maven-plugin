@@ -119,7 +119,7 @@ public class ClassLoader {
             if (runtimeConfiguration != null) {
                 runtimeConfiguration.getResolvedConfiguration().getResolvedArtifacts()
                         .forEach(artifact -> {
-                            String path = artifact.getFile().getAbsolutePath();
+                            var path = artifact.getFile().getAbsolutePath();
                             if (!classpathElements.contains(path)) {
                                 classpathElements.add(path);
                             }
@@ -131,18 +131,29 @@ public class ClassLoader {
             if (compileConfiguration != null) {
                 compileConfiguration.getResolvedConfiguration().getResolvedArtifacts()
                         .forEach(artifact -> {
-                            String path = artifact.getFile().getAbsolutePath();
+                            var path = artifact.getFile().getAbsolutePath();
                             if (!classpathElements.contains(path)) {
                                 classpathElements.add(path);
                             }
                         });
             }
 
-            // Добавляем скомпилированные классы проекта
+            // Добавляем скомпилированные классы проекта (Java)
             var compileJavaTask = config.gradleProject().getTasks().findByName("compileJava");
             if (compileJavaTask != null) {
                 compileJavaTask.getOutputs().getFiles().forEach(file -> {
-                    String path = file.getAbsolutePath();
+                    var path = file.getAbsolutePath();
+                    if (!classpathElements.contains(path)) {
+                        classpathElements.add(path);
+                    }
+                });
+            }
+
+            // Добавляем скомпилированные классы проекта (Kotlin)
+            var compileKotlinTask = config.gradleProject().getTasks().findByName("compileKotlin");
+            if (compileKotlinTask != null) {
+                compileKotlinTask.getOutputs().getFiles().forEach(file -> {
+                    var path = file.getAbsolutePath();
                     if (!classpathElements.contains(path)) {
                         classpathElements.add(path);
                     }
@@ -153,7 +164,7 @@ public class ClassLoader {
             var processResourcesTask = config.gradleProject().getTasks().findByName("processResources");
             if (processResourcesTask != null) {
                 processResourcesTask.getOutputs().getFiles().forEach(file -> {
-                    String path = file.getAbsolutePath();
+                    var path = file.getAbsolutePath();
                     if (!classpathElements.contains(path)) {
                         classpathElements.add(path);
                     }
