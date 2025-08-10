@@ -1,7 +1,8 @@
-package dev.parfenov.sowa.schema.plugin.generators.config;
+package dev.parfenov.sowa.schema.plugin.config;
 
 import com.github.victools.jsonschema.generator.*;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationOption;
+import dev.parfenov.sowa.schema.plugin.generators.handlers.*;
 
 /**
  * Конфигурация для генератора JSON Schema.

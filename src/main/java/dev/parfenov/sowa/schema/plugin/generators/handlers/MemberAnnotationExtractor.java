@@ -1,4 +1,4 @@
-package dev.parfenov.sowa.schema.plugin.generators.config;
+package dev.parfenov.sowa.schema.plugin.generators.handlers;
 
 import com.github.victools.jsonschema.generator.MemberScope;
 import io.swagger.v3.oas.annotations.media.ArraySchema;

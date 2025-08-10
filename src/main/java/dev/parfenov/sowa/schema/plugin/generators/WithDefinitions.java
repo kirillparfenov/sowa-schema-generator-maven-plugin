@@ -1,7 +1,7 @@
 package dev.parfenov.sowa.schema.plugin.generators;
 
 import com.github.victools.jsonschema.generator.SchemaGenerator;
-import dev.parfenov.sowa.schema.plugin.generators.config.GeneratorConfig;
+import dev.parfenov.sowa.schema.plugin.config.GeneratorConfig;
 import dev.parfenov.sowa.schema.plugin.generators.dto.GeneratedResult;
 
 import java.lang.reflect.Type;

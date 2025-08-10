@@ -1,10 +1,11 @@
 package dev.parfenov.sowa.schema.plugin.parsers;
 
-import dev.parfenov.sowa.schema.plugin.classloader.ClassLoader;
+import dev.parfenov.sowa.schema.plugin.config.ClassParserConfig;
 import dev.parfenov.sowa.schema.plugin.git.DependencySearcher;
 import dev.parfenov.sowa.schema.plugin.git.GitDiffParser;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.ClassModel;
 import io.github.classgraph.ClassInfo;
+import io.github.classgraph.ScanResult;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,10 +24,10 @@ import java.util.List;
  */
 public class ClassParser {
 
-    private final ClassLoader classLoader;
     private final EndpointPathParser endpointPathParser;
     private final ClassParserConfig config;
     private final GitDiffParser gitDiffParser;
+    private final String[] projectBasePackages;
 
     /**
      * Создает парсер классов с указанной конфигурацией.
@@ -34,10 +35,10 @@ public class ClassParser {
      * @param classParserConfig конфигурация парсера
      */
     public ClassParser(final ClassParserConfig classParserConfig) {
-        this.classLoader = new ClassLoader(classParserConfig);
-        this.endpointPathParser = new EndpointPathParser(classParserConfig.project());
+        this.endpointPathParser = new EndpointPathParser(classParserConfig.contextPath());
         this.config = classParserConfig;
         this.gitDiffParser = new GitDiffParser(classParserConfig.branchDiffWith(), classParserConfig.onlyGitDiff());
+        this.projectBasePackages = classParserConfig.projectBasePackages();
     }
 
     /**
@@ -50,22 +51,18 @@ public class ClassParser {
      * @return список проанализированных REST классов
      */
     @SuppressWarnings({"unchecked"})
-    public List<ClassModel> parseAllRestClasses() {
-        try (var scanResult = classLoader.getClassgraph().scan()) {
-            var restControllers = scanResult
-                    .getClassesWithAnyAnnotation(RestController.class, Controller.class)
-                    .filter(this::isProjectPackage)
-                    .stream()
-                    .toList();
+    public List<ClassModel> parseAllRestClasses(ScanResult scanResult) {
+        var restControllers = scanResult
+                .getClassesWithAnyAnnotation(RestController.class, Controller.class)
+                .filter(this::isProjectPackage)
+                .stream()
+                .toList();
 
-            var dependencySearcher = new DependencySearcher(scanResult, this);
-            return restControllers.stream()
-                    .map(classInfo -> parseRestController(classInfo, dependencySearcher))
-                    .peek(gitDiffParser::diff)
-                    .toList();
-        } catch (Exception e) {
-            throw new RuntimeException("Ошибка во время сканирования графа классов", e);
-        }
+        var dependencySearcher = new DependencySearcher(scanResult, this);
+        return restControllers.stream()
+                .map(classInfo -> parseRestController(classInfo, dependencySearcher))
+                .peek(gitDiffParser::diff)
+                .toList();
     }
 
     /**
@@ -76,7 +73,7 @@ public class ClassParser {
      */
     public boolean isProjectPackage(ClassInfo classInfo) {
         return Arrays
-                .stream(classLoader.baseProjectPackages())
+                .stream(projectBasePackages)
                 .anyMatch(packageName ->
                         classInfo.getPackageName().startsWith(packageName)
                 );

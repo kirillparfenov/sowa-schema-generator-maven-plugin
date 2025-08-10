@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaKeyword;
-import dev.parfenov.sowa.schema.plugin.generators.config.GeneratorConfig;
+import dev.parfenov.sowa.schema.plugin.config.GeneratorConfig;
 import dev.parfenov.sowa.schema.plugin.generators.dto.GeneratedResult;
 
 import java.lang.reflect.Type;

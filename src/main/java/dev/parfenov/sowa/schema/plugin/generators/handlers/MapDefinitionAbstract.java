@@ -1,12 +1,12 @@
-package dev.parfenov.sowa.schema.plugin.generators.config;
+package dev.parfenov.sowa.schema.plugin.generators.handlers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.victools.jsonschema.generator.SchemaGenerationContext;
 import com.github.victools.jsonschema.generator.SchemaKeyword;
 
-import static dev.parfenov.sowa.schema.plugin.generators.config.ValidationConstants.MAX_PROPERTIES;
-import static dev.parfenov.sowa.schema.plugin.generators.config.ValidationConstants.PATTERN_PROPERTIES_KEY;
+import static dev.parfenov.sowa.schema.plugin.generators.handlers.ValidationConstants.MAX_PROPERTIES;
+import static dev.parfenov.sowa.schema.plugin.generators.handlers.ValidationConstants.PATTERN_PROPERTIES_KEY;
 
 /**
  * Абстрактный базовый класс для работы с определениями Map типов в JSON схемах.

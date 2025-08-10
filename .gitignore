@@ -36,3 +36,9 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### SOWA ###
+sowa-build/
+
+
+dependency-reduced-pom.xml

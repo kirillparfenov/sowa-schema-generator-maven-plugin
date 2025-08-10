@@ -1,4 +1,5 @@
-package dev.parfenov.sowa.schema.plugin.generators.config;
+
+package dev.parfenov.sowa.schema.plugin.generators.handlers;
 
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -7,11 +8,12 @@ import com.github.victools.jsonschema.generator.CustomDefinition;
 import com.github.victools.jsonschema.generator.CustomDefinitionProviderV2;
 import com.github.victools.jsonschema.generator.SchemaGenerationContext;
 import com.github.victools.jsonschema.generator.SchemaKeyword;
+import dev.parfenov.sowa.schema.plugin.parsers.TypesParser;
 
 /**
- * Провайдер кастомных определений для базового типа Object.
+ * Провайдер кастомных определений для базового типа Void.
  * <p>
- * Этот класс предоставляет специальную схему JSON Schema для типа {@link Object},
+ * Этот класс предоставляет специальную схему JSON Schema для типа {@link Void},
  * которая позволяет дополнительные свойства и поддерживает как объектный тип,
  * так и null значения.
  * </p>
@@ -20,27 +22,27 @@ import com.github.victools.jsonschema.generator.SchemaKeyword;
  * @see CustomDefinitionProviderV2
  * @since 2025-08-03
  */
-public class CustomObjectDefinitionProvider implements CustomDefinitionProviderV2 {
+public class CustomVoidDefinitionProvider implements CustomDefinitionProviderV2 {
 
     /**
      * Предоставляет кастомное определение схемы для указанного Java типа.
      * <p>
-     * Метод проверяет, является ли переданный тип базовым классом {@link Object},
+     * Метод проверяет, является ли переданный тип базовым классом {@link Void},
      * и если да, то возвращает специальное определение схемы для него.
      * </p>
      *
      * @param javaType тип Java, для которого нужно предоставить определение схемы
      * @param context  контекст генерации схемы
-     * @return кастомное определение схемы для типа Object или null, если тип не Object
+     * @return кастомное определение схемы для типа Void или null, если тип не Void
      */
     @Override
     public CustomDefinition provideCustomSchemaDefinition(ResolvedType javaType, SchemaGenerationContext context) {
-        if (!javaType.getErasedType().equals(Object.class)) return null;
+        if (!TypesParser.isVoid(javaType)) return null;
         return buildCustomDefinition(context);
     }
 
     /**
-     * Строит кастомное определение схемы для типа {@link Object}.
+     * Строит кастомное определение схемы для типа {@link Void}.
      * <p>
      * Создает встроенное определение с включением всех атрибутов,
      * используя конфигурацию по умолчанию для объектов.
@@ -59,8 +61,9 @@ public class CustomObjectDefinitionProvider implements CustomDefinitionProviderV
      * <p>
      * Создает JSON объект со следующими свойствами:
      * <ul>
-     * <li>{@code additionalProperties: true}</li>
+     * <li>{@code additionalProperties: false}</li>
      * <li>{@code type: [object, null]}</li>
+     * <li>{@code properties: {}}</li>
      * </ul>
      * </p>
      *
@@ -70,7 +73,8 @@ public class CustomObjectDefinitionProvider implements CustomDefinitionProviderV
     private ObjectNode buildCustomNode(SchemaGenerationContext context) {
         var node = context.getGeneratorConfig().createObjectNode();
         node.set(context.getKeyword(SchemaKeyword.TAG_TYPE), availableTypes(context));
-        node.put(context.getKeyword(SchemaKeyword.TAG_ADDITIONAL_PROPERTIES), true);
+        node.put(context.getKeyword(SchemaKeyword.TAG_PROPERTIES), properties(context));
+        node.put(context.getKeyword(SchemaKeyword.TAG_ADDITIONAL_PROPERTIES), false);
         return node;
     }
 
@@ -79,8 +83,8 @@ public class CustomObjectDefinitionProvider implements CustomDefinitionProviderV
      * <p>
      * Возвращает массив, содержащий два типа:
      * <ul>
-     * <li>{@code object} - для объектных значений</li>
-     * <li>{@code null} - для null значений</li>
+     * <li> {@code object} - для объектных значений</li>
+     * <li> {@code null} - для null значений</li>
      * </ul>
      * </p>
      *
@@ -92,5 +96,13 @@ public class CustomObjectDefinitionProvider implements CustomDefinitionProviderV
         arrayNode.add(context.getKeyword(SchemaKeyword.TAG_TYPE_OBJECT));
         arrayNode.add(context.getKeyword(SchemaKeyword.TAG_TYPE_NULL));
         return arrayNode;
+    }
+
+    /**
+     * @param context контекст генерации схемы
+     * @return {@link ObjectNode} для {@code properties}
+     */
+    private ObjectNode properties(SchemaGenerationContext context) {
+        return context.getGeneratorConfig().createObjectNode();
     }
 }

@@ -1,4 +1,4 @@
-package dev.parfenov.sowa.schema.plugin.generators.config;
+package dev.parfenov.sowa.schema.plugin.generators.handlers;
 
 /**
  * Константы для валидации схем.

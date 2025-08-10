@@ -1,5 +1,6 @@
 package dev.parfenov.sowa.schema.plugin.exporters.schemas;
 
+import dev.parfenov.sowa.schema.plugin.config.ExportConfig;
 import dev.parfenov.sowa.schema.plugin.exporters.DirectoriesBuilder;
 import dev.parfenov.sowa.schema.plugin.generators.dto.GeneratedResult;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.ClassModel;
