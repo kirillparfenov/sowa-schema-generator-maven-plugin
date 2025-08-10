@@ -149,13 +149,13 @@ public final class ConfigurationFactory {
      * @param uberJarPath                 путь к uber JAR файлу
      * @return настроенный экземпляр Plugin
      */
-    public static Plugin createStandalonePlugin(String[] packages,
-                                                boolean onlyGitDiff,
-                                                String branchDiffWith,
-                                                boolean extractDefinitions,
-                                                int stringLengthIncreasePercent,
-                                                String sowaProfileName,
-                                                String uberJarPath) {
+    public static Plugin createCliPlugin(String[] packages,
+                                         boolean onlyGitDiff,
+                                         String branchDiffWith,
+                                         boolean extractDefinitions,
+                                         int stringLengthIncreasePercent,
+                                         String sowaProfileName,
+                                         String uberJarPath) {
         var contextPath = PropertiesParser.contextPath(uberJarPath);
 
         var parserConfig = createStandaloneParserConfig(
@@ -175,7 +175,7 @@ public final class ConfigurationFactory {
      *
      * @return настроенный экземпляр Plugin
      */
-    public static Plugin createStandalonePluginFromSystemProperties() {
+    public static Plugin createCliPluginFromSystemProperties() {
         var onlyGitDiff = Boolean.parseBoolean(System.getProperty("onlyGitDiff", "false"));
         var branchDiffWith = System.getProperty("branchDiffWith", DEFAULT_BRANCH_DIFF);
         var extractDefinitions = Boolean.parseBoolean(System.getProperty("extractDefinitions", "false"));
@@ -202,7 +202,7 @@ public final class ConfigurationFactory {
         System.out.println("SOWA_PROFILE_NAME: " + sowaProfileName);
         System.out.println("UBER_JAR_LINK: " + uberJarPath);
 
-        return createStandalonePlugin(
+        return createCliPlugin(
                 packages,
                 onlyGitDiff,
                 branchDiffWith,
