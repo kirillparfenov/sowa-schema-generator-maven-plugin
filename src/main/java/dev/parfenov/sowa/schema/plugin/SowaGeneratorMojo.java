@@ -1,15 +1,6 @@
 package dev.parfenov.sowa.schema.plugin;
 
-import dev.parfenov.sowa.schema.plugin.exporters.DirectoriesBuilder;
-import dev.parfenov.sowa.schema.plugin.exporters.infra.InfraConfig;
-import dev.parfenov.sowa.schema.plugin.exporters.infra.InfraExporter;
-import dev.parfenov.sowa.schema.plugin.exporters.schemas.ExportConfig;
-import dev.parfenov.sowa.schema.plugin.exporters.schemas.SchemaExporter;
-import dev.parfenov.sowa.schema.plugin.generators.GeneratorStrategy;
-import dev.parfenov.sowa.schema.plugin.generators.config.GeneratorConfig;
-import dev.parfenov.sowa.schema.plugin.generators.sowa.SowaSchemaBuilder;
-import dev.parfenov.sowa.schema.plugin.parsers.ClassParser;
-import dev.parfenov.sowa.schema.plugin.parsers.ClassParserConfig;
+import dev.parfenov.sowa.schema.plugin.config.ConfigurationFactory;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -86,14 +77,17 @@ public class SowaGeneratorMojo extends AbstractMojo {
      */
     @Override
     public synchronized void execute() {
-        var parserConfig = new ClassParserConfig(project, projectPackages, onlyGitDiff, branchDiffWith);
-        var restControllers = new ClassParser(parserConfig).parseAllRestClasses();
-
-        var generator = GeneratorStrategy.getGenerator(new GeneratorConfig(extractDefinitions, stringLengthIncreasePercent));
-        new SowaSchemaBuilder(generator).setSowaSchemas(restControllers);
-
-        var directoriesBuilder = new DirectoriesBuilder(project);
-        new SchemaExporter(new ExportConfig(directoriesBuilder, project, getLog())).export(restControllers);
-        new InfraExporter(new InfraConfig(directoriesBuilder, project, sowaProfileName)).export(restControllers);
+        var plugin = ConfigurationFactory.createMavenPlugin(
+                project,
+                projectPackages,
+                onlyGitDiff,
+                branchDiffWith,
+                extractDefinitions,
+                stringLengthIncreasePercent,
+                sowaProfileName,
+                getLog()
+        );
+        
+        plugin.start();
     }
 }

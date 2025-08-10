@@ -1,6 +1,6 @@
 package dev.parfenov.sowa.schema.plugin.generators;
 
-import dev.parfenov.sowa.schema.plugin.generators.config.GeneratorConfig;
+import dev.parfenov.sowa.schema.plugin.config.GeneratorConfig;
 
 /**
  * Стратегия для выбора типа генератора JSON Schema.

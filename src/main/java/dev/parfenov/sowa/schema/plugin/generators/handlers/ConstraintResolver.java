@@ -1,4 +1,4 @@
-package dev.parfenov.sowa.schema.plugin.generators.config;
+package dev.parfenov.sowa.schema.plugin.generators.handlers;
 
 import com.fasterxml.classmate.ResolvedType;
 import com.github.victools.jsonschema.generator.MemberScope;
@@ -14,9 +14,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
-import static dev.parfenov.sowa.schema.plugin.generators.config.MemberAnnotationExtractor.getSchemaAnnotationValue;
-import static dev.parfenov.sowa.schema.plugin.generators.config.ValidationConstants.DEFAULT_STRING_MAX_LENGTH;
-import static dev.parfenov.sowa.schema.plugin.generators.config.ValidationConstants.UUID_MAX_LENGTH;
+import static dev.parfenov.sowa.schema.plugin.generators.handlers.MemberAnnotationExtractor.getSchemaAnnotationValue;
+import static dev.parfenov.sowa.schema.plugin.generators.handlers.ValidationConstants.DEFAULT_STRING_MAX_LENGTH;
+import static dev.parfenov.sowa.schema.plugin.generators.handlers.ValidationConstants.UUID_MAX_LENGTH;
 
 /**
  * Утилитарный класс для определения ограничений типов в JSON Schema.

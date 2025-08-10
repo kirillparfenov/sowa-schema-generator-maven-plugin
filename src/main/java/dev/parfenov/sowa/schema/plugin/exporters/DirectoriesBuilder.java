@@ -3,6 +3,7 @@ package dev.parfenov.sowa.schema.plugin.exporters;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
+import java.util.Optional;
 
 /**
  * Построитель структуры директорий для экспорта схем и конфигурационных файлов.
@@ -22,16 +23,14 @@ import java.io.File;
  */
 public class DirectoriesBuilder {
 
+    private static final String BASE_DIR = "sowa-build";
     private static final String SOWA_DIRECTORY = File.separator + "sowa";
     private static final String REQUEST_DIRECTORY = File.separator + "request";
     private static final String RESPONSE_DIRECTORY = File.separator + "response";
     private static final String INFRASTRUCTURE_DIRECTORY = "";
     private static final String SERVICES_YML = "services.yml";
 
-    private final MavenProject project;
-
-    public DirectoriesBuilder(final MavenProject project) {
-        this.project = project;
+    public DirectoriesBuilder() {
     }
 
     /**
@@ -92,7 +91,7 @@ public class DirectoriesBuilder {
      * @return основная директория sowa
      */
     private File sowaDir() {
-        return buildDir(new File(project.getBuild().getDirectory()), SOWA_DIRECTORY);
+        return buildDir(new File(BASE_DIR), SOWA_DIRECTORY);
     }
 
     /**

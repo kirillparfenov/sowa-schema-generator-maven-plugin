@@ -1,6 +1,6 @@
-package dev.parfenov.sowa.schema.plugin.generators.config;
+package dev.parfenov.sowa.schema.plugin.generators.handlers;
 
-import static dev.parfenov.sowa.schema.plugin.generators.config.ValidationConstants.*;
+import static dev.parfenov.sowa.schema.plugin.generators.handlers.ValidationConstants.*;
 
 /**
  * Калькулятор длины строк с учетом процента увеличения.

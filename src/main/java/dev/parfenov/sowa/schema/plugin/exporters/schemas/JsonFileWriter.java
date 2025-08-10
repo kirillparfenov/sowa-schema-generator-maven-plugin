@@ -40,6 +40,8 @@ public class JsonFileWriter {
             mapper.writerWithDefaultPrettyPrinter().writeValue(file, jsonNode);
             if (logger != null) {
                 logger.info("Записан JSON файл: %s".formatted(file.getPath()));
+            } else {
+                System.out.println("Записан JSON файл: %s".formatted(file.getPath()));
             }
         } catch (IOException e) {
             throw new JsonWriteException(

@@ -1,6 +1,6 @@
 package dev.parfenov.sowa.schema.plugin.classloader;
 
-import dev.parfenov.sowa.schema.plugin.parsers.ClassParserConfig;
+import dev.parfenov.sowa.schema.plugin.config.ClassParserConfig;
 import io.github.classgraph.ClassGraph;
 
 import java.io.File;
@@ -86,8 +86,12 @@ public class ClassLoader {
         }
         try {
             var classpathElements = new HashSet<String>();
-            classpathElements.addAll(config.project().getRuntimeClasspathElements());
-            classpathElements.addAll(config.project().getCompileClasspathElements());
+            if (config.project() != null) {
+                classpathElements.addAll(config.project().getRuntimeClasspathElements());
+                classpathElements.addAll(config.project().getCompileClasspathElements());
+            } else if(config.uberJarLink() != null) {
+                classpathElements.add(config.uberJarLink());
+            }
             var urls = new ArrayList<URL>(classpathElements.size());
             for (var element : classpathElements) {
                 urls.add(new File(element).toURI().toURL());

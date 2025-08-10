@@ -8,6 +8,9 @@ import io.github.classgraph.MethodInfo;
 import org.apache.maven.project.MavenProject;
 import org.springframework.util.CollectionUtils;
 
+import java.io.File;
+import java.io.InputStream;
+
 /**
  * Парсер путей эндпоинтов Spring MVC.
  * <p>
@@ -19,10 +22,10 @@ import org.springframework.util.CollectionUtils;
  */
 public class EndpointPathParser {
 
-    private final MavenProject mavenProject;
+    private final String contextPath;
 
-    public EndpointPathParser(final MavenProject mavenProject) {
-        this.mavenProject = mavenProject;
+    public EndpointPathParser(final String contextPath) {
+        this.contextPath = contextPath;
     }
 
     /**
@@ -33,7 +36,7 @@ public class EndpointPathParser {
      * @return полный путь с regex паттернами для переменных пути
      */
     public String resolvePathWithVariables(ClassModel classModel, MethodModel methodModel) {
-        var fullPath = contextPath() + classModel.getEndpointPath() + methodModel.getEndpointPath() + "$";
+        var fullPath = contextPath + classModel.getEndpointPath() + methodModel.getEndpointPath() + "$";
         var pathVariables = methodModel.getPathVariables();
         if (CollectionUtils.isEmpty(pathVariables)) {
             return fullPath;
@@ -45,15 +48,6 @@ public class EndpointPathParser {
             fullPath = fullPath.replaceAll(name, regex);
         }
         return fullPath;
-    }
-
-    /**
-     * Получает контекстный путь приложения.
-     *
-     * @return контекстный путь из конфигурации проекта
-     */
-    public String contextPath() {
-        return PropertiesParser.contextPath(mavenProject);
     }
 
     /**

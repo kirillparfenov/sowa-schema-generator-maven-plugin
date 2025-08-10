@@ -1,6 +1,6 @@
 package dev.parfenov.sowa.schema.plugin.exporters.infra.factories;
 
-import dev.parfenov.sowa.schema.plugin.exporters.infra.InfraConfig;
+import dev.parfenov.sowa.schema.plugin.config.InfraConfig;
 import dev.parfenov.sowa.schema.plugin.exporters.infra.ServicesYaml;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.ClassModel;
 import dev.parfenov.sowa.schema.plugin.parsers.dto.MethodModel;

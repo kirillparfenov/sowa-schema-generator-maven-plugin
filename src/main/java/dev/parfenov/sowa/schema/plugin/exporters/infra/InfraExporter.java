@@ -7,6 +7,7 @@ package dev.parfenov.sowa.schema.plugin.exporters.infra;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import dev.parfenov.sowa.schema.plugin.config.InfraConfig;
 import dev.parfenov.sowa.schema.plugin.exporters.DirectoriesBuilder;
 import dev.parfenov.sowa.schema.plugin.exporters.infra.factories.ServicesYamlFactory;
 import dev.parfenov.sowa.schema.plugin.generators.NameGenerator;
@@ -40,7 +41,7 @@ public class InfraExporter {
     private final ServicesYamlFactory servicesFactory;
 
     public InfraExporter(final InfraConfig infraConfig) {
-        this.endpointPathParser = new EndpointPathParser(infraConfig.project());
+        this.endpointPathParser = new EndpointPathParser(infraConfig.contextPath());
         this.directoriesBuilder = infraConfig.directoriesBuilder();
         this.servicesFactory = new ServicesYamlFactory(infraConfig);
     }

@@ -1,4 +1,4 @@
-package dev.parfenov.sowa.schema.plugin.generators.config;
+package dev.parfenov.sowa.schema.plugin.generators.handlers;
 
 import com.github.victools.jsonschema.generator.*;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationModule;
@@ -12,10 +12,10 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static dev.parfenov.sowa.schema.plugin.generators.config.ConstraintResolver.resolveNumericMaximum;
-import static dev.parfenov.sowa.schema.plugin.generators.config.ConstraintResolver.resolveNumericMinimum;
-import static dev.parfenov.sowa.schema.plugin.generators.config.MemberAnnotationExtractor.getSchemaAnnotationValue;
-import static dev.parfenov.sowa.schema.plugin.generators.config.ValidationConstants.ARRAY_MAX_SIZE;
+import static dev.parfenov.sowa.schema.plugin.generators.handlers.ConstraintResolver.resolveNumericMaximum;
+import static dev.parfenov.sowa.schema.plugin.generators.handlers.ConstraintResolver.resolveNumericMinimum;
+import static dev.parfenov.sowa.schema.plugin.generators.handlers.MemberAnnotationExtractor.getSchemaAnnotationValue;
+import static dev.parfenov.sowa.schema.plugin.generators.handlers.ValidationConstants.ARRAY_MAX_SIZE;
 
 /**
  * Кастомный модуль валидации Jakarta для генерации JSON Schema.

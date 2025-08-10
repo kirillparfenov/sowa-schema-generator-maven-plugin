@@ -1,8 +1,7 @@
-package dev.parfenov.sowa.schema.plugin.exporters.schemas;
+package dev.parfenov.sowa.schema.plugin.config;
 
 import dev.parfenov.sowa.schema.plugin.exporters.DirectoriesBuilder;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.project.MavenProject;
 
 /**
  * @author <a href="https://github.com/kirillparfenov">Kirill Parfenov</a>
@@ -10,7 +9,6 @@ import org.apache.maven.project.MavenProject;
  */
 public record ExportConfig(
         DirectoriesBuilder directoriesBuilder,
-        MavenProject project,
         Log log
 ) {
 }

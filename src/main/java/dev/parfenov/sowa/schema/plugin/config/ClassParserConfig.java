@@ -1,4 +1,4 @@
-package dev.parfenov.sowa.schema.plugin.parsers;
+package dev.parfenov.sowa.schema.plugin.config;
 
 import org.apache.maven.project.MavenProject;
 
@@ -16,6 +16,8 @@ public record ClassParserConfig(
         MavenProject project,
         String[] projectBasePackages,
         boolean onlyGitDiff,
-        String branchDiffWith
+        String branchDiffWith,
+        String uberJarLink,
+        String contextPath
 ) {
 }

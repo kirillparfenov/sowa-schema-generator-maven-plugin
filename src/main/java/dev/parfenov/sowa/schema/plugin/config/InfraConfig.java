@@ -3,7 +3,7 @@
  * @see https://github.com/kirillparfenov
  * @since 2025
  */
-package dev.parfenov.sowa.schema.plugin.exporters.infra;
+package dev.parfenov.sowa.schema.plugin.config;
 
 import dev.parfenov.sowa.schema.plugin.exporters.DirectoriesBuilder;
 import org.apache.maven.project.MavenProject;
@@ -15,6 +15,7 @@ import org.apache.maven.project.MavenProject;
 public record InfraConfig(
         DirectoriesBuilder directoriesBuilder,
         MavenProject project,
-        String sowaProfileName
+        String sowaProfileName,
+        String contextPath
 ) {
 }

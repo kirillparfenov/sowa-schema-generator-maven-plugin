@@ -1,7 +1,7 @@
 package dev.parfenov.sowa.schema.plugin.generators;
 
 import com.fasterxml.classmate.TypeResolver;
-import dev.parfenov.sowa.schema.plugin.generators.config.ConstraintResolver;
+import dev.parfenov.sowa.schema.plugin.generators.handlers.ConstraintResolver;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
