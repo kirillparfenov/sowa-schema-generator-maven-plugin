@@ -140,8 +140,8 @@ java -jar sowa-schema-plugin.jar \
 <configuration>
     <projectPackage>com.example.myapp</projectPackage>
     <projectPackages>
-        <projectPackage>dev.parfenov.sowa.schema.generator</projectPackage>
-        <projectPackage>common.dto</projectPackage>
+        <projectPackage>com.example.package</projectPackage>
+        <projectPackage>common.dto.package</projectPackage>
     </projectPackages>
 </configuration>
 ```
@@ -152,12 +152,20 @@ java -jar sowa-schema-plugin.jar \
 <configuration>
     <projectPackage>com.example.myapp</projectPackage>
     <projectPackages>
-        <projectPackage>dev.parfenov.sowa.schema.generator</projectPackage>
-        <projectPackage>common.dto</projectPackage>
+        <projectPackage>com.example.package</projectPackage>
+        <projectPackage>common.dto.package</projectPackage>
     </projectPackages>
     <onlyGitDiff>true</onlyGitDiff>
     <branchDiffWith>origin/main</branchDiffWith>
 </configuration>
+```
+```gradle
+sowaSchema {
+    projectPackages = ['com.example.package', 'common.dto.package']
+    sowaProfileName = 'super_profile_name'
+    onlyGitDiff = true
+    branchDiffWith = 'origin/main'
+}
 ```
 
 ### Конфигурация с настройкой длины строк
@@ -166,11 +174,18 @@ java -jar sowa-schema-plugin.jar \
 <configuration>
     <projectPackage>com.example.myapp</projectPackage>
     <projectPackages>
-        <projectPackage>dev.parfenov.sowa.schema.generator</projectPackage>
-        <projectPackage>common.dto</projectPackage>
+        <projectPackage>com.example.package</projectPackage>
+        <projectPackage>common.dto.package</projectPackage>
     </projectPackages>
     <stringLengthIncreasePercent>15</stringLengthIncreasePercent>
 </configuration>
+```
+```gradle
+sowaSchema {
+    projectPackages = ['com.example.package', 'common.dto.package']
+    sowaProfileName = 'super_profile_name'
+    stringLengthIncreasePercent = 15
+}
 ```
 
 ## Примеры использования схем
