@@ -113,24 +113,25 @@ sowaSchema {
 #### Запуск
 
 ```bash
-java -jar sowa-schema-plugin.jar \
-  -DprojectPackages=com.example.package,common.dto.package \
+java -DprojectPackages=com.example.package,common.dto.package \
   -DsowaProfileName=super_profile_name \
-  -DuberJarLink=/path/to/your/application.jar
+  -DuberJarPath=/path/to/your/application.jar \
+  -jar sowa-schema-plugin.jar
 ```
 
 ## Параметры конфигурации
 
 Следующие параметры применимы во всех трех режимах использования (Maven, Gradle, CLI):
 
-| Параметр                      | Описание                                                          | Тип | Обязательный | Значение по умолчанию | Возможные значения |
-|-------------------------------|-------------------------------------------------------------------|-----|--------------|-----------------------|-------------------|
-| `sowaProfileName`             | Имя профиля SOWA для генерации инфраструктурных файлов            | String | Нет          | `SOWA_PROFILE_NAME`   | Любое строковое значение |
-| `projectPackages`             | Базовые пакет проекта для поиска REST контроллеров и доп. классов | String | **Да**       | -                     | Полное имя пакета (например, `com.example.project`) |
-| `extractDefinitions`          | Извлекать ли определения схем в отдельную секцию                  | Boolean | Нет          | `false`               | `true` / `false` |
-| `onlyGitDiff`                 | Обрабатывать только файлы, измененные в Git                       | Boolean | Нет          | `false`               | `true` / `false` |
-| `branchDiffWith`              | Ветка для сравнения изменений при использовании `onlyGitDiff`     | String | Нет          | `origin/develop`      | Любое имя ветки Git |
-| `stringLengthIncreasePercent` | Процент увеличения длины строковых полей в схемах                 | Integer | Нет          | 0                     | Положительное целое число |
+| Параметр                      | Описание                                                                         | Тип     | Обязательный | Значение по умолчанию | Возможные значения                                  |
+|-------------------------------|----------------------------------------------------------------------------------|---------|--------------|-----------------------|-----------------------------------------------------|
+| `sowaProfileName`             | Имя профиля SOWA для генерации инфраструктурных файлов                           | String  | Нет          | `SOWA_PROFILE_NAME`   | Любое строковое значение                            |
+| `projectPackages`             | Базовые пакет проекта для поиска REST контроллеров и доп. классов                | String  | **Да**       | -                     | Полное имя пакета (например, `com.example.project`) |
+| `extractDefinitions`          | Извлекать ли определения схем в отдельную секцию                                 | Boolean | Нет          | `false`               | `true` / `false`                                    |
+| `onlyGitDiff`                 | Обрабатывать только файлы, измененные в Git                                      | Boolean | Нет          | `false`               | `true` / `false`                                    |
+| `branchDiffWith`              | Ветка для сравнения изменений при использовании `onlyGitDiff`                    | String  | Нет          | `origin/develop`      | Любое имя ветки Git                                 |
+| `stringLengthIncreasePercent` | Процент увеличения длины строковых полей в схемах                                | Integer | Нет          | 0                     | Положительное целое число                           |
+| `uberJarPath`                 | Путь к uber-jar приложению, которое нужно сканировать. **(ПАРАМЕТР ТОЛЬКО ДЛЯ CLI)** | String  | **Да (для cli)** | -                     | Абсолютный путь до uber-jar в системе               |
 
 ## Примеры
 
