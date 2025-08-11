@@ -258,13 +258,13 @@ public final class ConfigurationFactory {
         var stringLengthIncreasePercent = Integer.parseInt(System.getProperty("stringLengthIncreasePercent", "0"));
         var sowaProfileName = System.getProperty("sowaProfileName", DEFAULT_SOWA_PROFILE);
 
-        var uberJarPath = System.getProperty("uberJarLink");
+        var uberJarPath = System.getProperty("uberJarPath");
         Assert.hasText(uberJarPath, "Не передан параметр -DuberJarLink=<ссылка на uber-jar>");
 
-        var packagesParam = System.getProperty("packages");
-        Assert.hasText(packagesParam, "Не передан параметр -Dpackages=[com.example.package,common.package]");
+        var projectPackages = System.getProperty("projectPackages");
+        Assert.hasText(projectPackages, "Не передан параметр -Dpackages=[com.example.package,common.package]");
         var packages = Arrays
-                .stream(packagesParam.split(","))
+                .stream(projectPackages.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .toArray(String[]::new);
