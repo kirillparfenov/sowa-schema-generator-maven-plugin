@@ -1,7 +1,10 @@
 package dev.parfenov.sowa.schema.plugin;
 
 import dev.parfenov.sowa.schema.plugin.classloader.ClassLoader;
-import dev.parfenov.sowa.schema.plugin.config.*;
+import dev.parfenov.sowa.schema.plugin.config.ClassParserConfig;
+import dev.parfenov.sowa.schema.plugin.config.ExportConfig;
+import dev.parfenov.sowa.schema.plugin.config.GeneratorConfig;
+import dev.parfenov.sowa.schema.plugin.config.InfraConfig;
 import dev.parfenov.sowa.schema.plugin.exporters.DirectoriesBuilder;
 import dev.parfenov.sowa.schema.plugin.exporters.infra.InfraExporter;
 import dev.parfenov.sowa.schema.plugin.exporters.schemas.SchemaExporter;

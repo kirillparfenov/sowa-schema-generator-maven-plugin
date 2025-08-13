@@ -128,8 +128,8 @@ java -DprojectPackages=com.example.package,common.dto.package \
 | `sowaProfileName`             | Имя профиля SOWA для генерации инфраструктурных файлов                           | String  | Нет          | `SOWA_PROFILE_NAME`   | Любое строковое значение                            |
 | `projectPackages`             | Базовые пакет проекта для поиска REST контроллеров и доп. классов                | String  | **Да**       | -                     | Полное имя пакета (например, `com.example.project`) |
 | `extractDefinitions`          | Извлекать ли определения схем в отдельную секцию                                 | Boolean | Нет          | `false`               | `true` / `false`                                    |
-| `onlyGitDiff`                 | Обрабатывать только файлы, измененные в Git                                      | Boolean | Нет          | `false`               | `true` / `false`                                    |
-| `branchDiffWith`              | Ветка для сравнения изменений при использовании `onlyGitDiff`                    | String  | Нет          | `origin/develop`      | Любое имя ветки Git                                 |
+| `onlyGitDiff`                 | Обрабатывать только файлы, измененные в Git                                      | Boolean | Нет          | `false`               | `true` / `false` (пока недоступно в cli)            |
+| `branchDiffWith`              | Ветка для сравнения изменений при использовании `onlyGitDiff`                    | String  | Нет          | `origin/develop`      | Любое имя ветки Git (пока недоступно в cli)         |
 | `stringLengthIncreasePercent` | Процент увеличения длины строковых полей в схемах                                | Integer | Нет          | 0                     | Положительное целое число                           |
 | `uberJarPath`                 | Путь к uber-jar приложению, которое нужно сканировать. **(ПАРАМЕТР ТОЛЬКО ДЛЯ CLI)** | String  | **Да (для cli)** | -                     | Абсолютный путь до uber-jar в системе               |
 

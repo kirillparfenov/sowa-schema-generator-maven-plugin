@@ -252,17 +252,19 @@ public final class ConfigurationFactory {
      * @return настроенный экземпляр Plugin
      */
     public static Plugin createCliPluginFromSystemProperties() {
-        var onlyGitDiff = Boolean.parseBoolean(System.getProperty("onlyGitDiff", "false"));
-        var branchDiffWith = System.getProperty("branchDiffWith", DEFAULT_BRANCH_DIFF);
+        var onlyGitDiff = false;// Boolean.parseBoolean(System.getProperty("onlyGitDiff", "false"));
+        var branchDiffWith = "";// System.getProperty("branchDiffWith", DEFAULT_BRANCH_DIFF);
+        //работа с git через cli должна осуществляться через подключаемое API.
+
         var extractDefinitions = Boolean.parseBoolean(System.getProperty("extractDefinitions", "false"));
         var stringLengthIncreasePercent = Integer.parseInt(System.getProperty("stringLengthIncreasePercent", "0"));
         var sowaProfileName = System.getProperty("sowaProfileName", DEFAULT_SOWA_PROFILE);
 
         var uberJarPath = System.getProperty("uberJarPath");
-        Assert.hasText(uberJarPath, "Не передан параметр -DuberJarLink=<ссылка на uber-jar>");
+        Assert.hasText(uberJarPath, "Не передан параметр -DuberJarPath=<ссылка на uber-jar>");
 
         var projectPackages = System.getProperty("projectPackages");
-        Assert.hasText(projectPackages, "Не передан параметр -Dpackages=[com.example.package,common.package]");
+        Assert.hasText(projectPackages, "Не передан параметр -DprojectPackages=[com.example.package,common.package]");
         var packages = Arrays
                 .stream(projectPackages.split(","))
                 .map(String::trim)
