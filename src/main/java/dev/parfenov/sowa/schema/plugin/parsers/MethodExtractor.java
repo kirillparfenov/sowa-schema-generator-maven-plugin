@@ -11,6 +11,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -66,7 +67,7 @@ public final class MethodExtractor {
      */
     public static Type extractResponse(Method method) {
         try {
-            return unwrapResponseEntity(method.getGenericReturnType());
+            return unwrapOptional(unwrapResponseEntity(method.getGenericReturnType()));
         } catch (Exception e) {
             System.out.println("Ошибка получения genericType: " + e.getMessage());
             return Void.class;
@@ -82,6 +83,19 @@ public final class MethodExtractor {
     private static Type unwrapResponseEntity(Type response) {
         return response instanceof ParameterizedType parameterizedType
                 && parameterizedType.getRawType().equals(ResponseEntity.class)
+                ? parameterizedType.getActualTypeArguments()[0]
+                : response;
+    }
+
+    /**
+     * Извлекает тип из {@link Optional}
+     *
+     * @param response ответ метода
+     * @return очищенный тип от {@link Optional}
+     */
+    private static Type unwrapOptional(Type response) {
+        return response instanceof ParameterizedType parameterizedType
+                && parameterizedType.getRawType().equals(Optional.class)
                 ? parameterizedType.getActualTypeArguments()[0]
                 : response;
     }
