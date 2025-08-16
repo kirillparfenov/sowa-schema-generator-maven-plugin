@@ -173,4 +173,12 @@
         </repository>
     </repositories>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/kirillparfenov/sowa-schema-generator-maven-plugin</url>
+        </repository>
+    </distributionManagement>
+
 </project>
