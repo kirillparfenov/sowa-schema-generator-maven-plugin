@@ -28,7 +28,7 @@
 
 ```bash
 # Клонируйте репозиторий
-git clone [https://github.com/kirillparfenov/sowa-schema-plugin.git](https://github.com/kirillparfenov/sowa-schema-generator-maven-plugin.git)
+git clone https://github.com/kirillparfenov/sowa-schema-generator-maven-plugin.git
 cd sowa-schema-generator-maven-plugin
 
 # Установите плагин в локальный .m2 репозиторий
