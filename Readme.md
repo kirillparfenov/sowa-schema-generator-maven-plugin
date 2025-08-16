@@ -28,8 +28,8 @@
 
 ```bash
 # Клонируйте репозиторий
-git clone https://github.com/kirillparfenov/sowa-schema-plugin.git
-cd sowa-schema-plugin
+git clone [https://github.com/kirillparfenov/sowa-schema-plugin.git](https://github.com/kirillparfenov/sowa-schema-generator-maven-plugin.git)
+cd sowa-schema-generator-maven-plugin
 
 # Установите плагин в локальный .m2 репозиторий
 mvn clean install
@@ -220,7 +220,7 @@ public class ExampleDefault {
 
 #### Указание подтипов с помощью аннотаций Jackson
 
-Для более точного определения возможных типов объекта используйте аннотации `@JsonTypeInfo` и `@JsonSubTypes`:
+Для более точного определения возможных типов объекта используйте аннотации `@JsonSubTypes`:
 
 ```java
 @Getter
