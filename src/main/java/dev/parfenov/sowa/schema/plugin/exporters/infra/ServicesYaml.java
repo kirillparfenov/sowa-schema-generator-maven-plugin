@@ -228,11 +228,22 @@ public class ServicesYaml {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Param {
+        @JsonProperty("allow_empty_body")
+        private Boolean allowEmptyBody = true;
+
         @JsonProperty("validation_schema")
         private ValidationSchema validationSchema;
 
         @JsonProperty("max_allowable_size")
         private String maxAllowableSize;
+
+        public Boolean getAllowEmptyBody() {
+            return allowEmptyBody;
+        }
+
+        public void setAllowEmptyBody(Boolean allowEmptyBody) {
+            this.allowEmptyBody = allowEmptyBody;
+        }
 
         public ValidationSchema getValidationSchema() {
             return validationSchema;
