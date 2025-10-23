@@ -107,6 +107,47 @@ sowaSchema {
 ```bash
 ./gradlew generateSchema
 ```
+### Gradle KTS Plugin
+
+#### Конфигурация
+
+1. Добавьте в ваш `build.gradle.kts`:
+
+```gradle
+plugins {
+    id("dev.parfenov.sowa-schema") version "1.0.0"
+}
+configure<dev.parfenov.sowa.schema.plugin.config.gradle.SowaSchemaExtension> {
+    projectPackages = arrayOf("com.example.package")
+    sowaProfileName = "profile"
+}
+dependencies {
+    implementation("dev.parfenov:sowa-schema-generator-maven-plugin:1.0.0")
+}
+```
+2. Добавьте в ваш `settings.gradle.kts`:
+```gradle
+   repositories {
+        mavenLocal()
+        resolutionStrategy {
+            eachPlugin {
+                if(requested.id.namespace?.startsWith("dev.parfenov") == true) {
+                    useModule("dev.parfenov:sowa-schema-generator-maven-plugin:${requested.version}")
+                }
+            }
+        }
+   }
+```
+#### Запуск
+
+```bash
+./gradlew generateSchema
+```
+или с помощью Gradle tool window
+
+![GradleToolWindow.png](GradleToolWindow.png)
+
+
 
 ### CLI (Command Line Interface)
 
